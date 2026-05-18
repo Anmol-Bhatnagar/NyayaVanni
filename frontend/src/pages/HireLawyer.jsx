@@ -1,13 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Briefcase, Calendar, Scale, Search, Filter } from 'lucide-react';
+import { 
+  ArrowLeft, Star, MapPin, Briefcase, Calendar, Scale, 
+  Search, Filter, Clock, X, Check, FileText, Bookmark, 
+  ChevronRight, CalendarDays, ExternalLink, BadgeAlert, BadgeCheck
+} from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function HireLawyer() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  
+  // Search and Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
+
+  // Modal / Booking State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedLawyer, setSelectedLawyer] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [caseDescription, setCaseDescription] = useState('');
+  const [attachDocument, setAttachDocument] = useState(false);
+  const [bookingComplete, setBookingComplete] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState(null);
+
+  // Persistence State
+  const [activeBookings, setActiveBookings] = useState([]);
+
+  // Load existing bookings from local storage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nyayavanni_consultations');
+      if (stored) {
+        setActiveBookings(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Failed to load consultations", e);
+    }
+  }, []);
 
   // Mock Data for Lawyers
   const mockLawyers = [
@@ -19,7 +50,7 @@ export default function HireLawyer() {
       rating: 4.8,
       location: "New Delhi, Delhi",
       fee: "₹2,000/Consultation",
-      image: "https://i.pravatar.cc/150?u=a042581f4e29026024d"
+      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256"
     },
     {
       id: 2,
@@ -29,7 +60,7 @@ export default function HireLawyer() {
       rating: 4.9,
       location: "Mumbai, Maharashtra",
       fee: "₹2,500/Consultation",
-      image: "https://i.pravatar.cc/150?u=a04258a2462d826712d"
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256&h=256"
     },
     {
       id: 3,
@@ -39,7 +70,7 @@ export default function HireLawyer() {
       rating: 4.7,
       location: "Bengaluru, Karnataka",
       fee: "₹5,000/Consultation",
-      image: "https://i.pravatar.cc/150?u=a042581f4e29026704d"
+      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=256&h=256"
     },
     {
       id: 4,
@@ -49,7 +80,7 @@ export default function HireLawyer() {
       rating: 4.6,
       location: "Pune, Maharashtra",
       fee: "₹1,500/Consultation",
-      image: "https://i.pravatar.cc/150?u=a048581f4e29026701d"
+      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=256&h=256"
     },
     {
       id: 5,
@@ -59,7 +90,7 @@ export default function HireLawyer() {
       rating: 4.8,
       location: "Chennai, Tamil Nadu",
       fee: "₹3,000/Consultation",
-      image: "https://i.pravatar.cc/150?u=a04258114e29026702d"
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=256&h=256"
     },
     {
       id: 6,
@@ -69,12 +100,41 @@ export default function HireLawyer() {
       rating: 4.9,
       location: "Hyderabad, Telangana",
       fee: "₹4,000/Consultation",
-      image: "https://i.pravatar.cc/150?u=a04258114e29026302d"
+      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256"
     }
   ];
 
-  const categories = ["All", "Real Estate & Property", "Family Law & Divorce", "Corporate & Business", "Criminal Defense", "Civil Litigation", "Intellectual Property"];
+  const categories = [
+    "All", 
+    "Real Estate & Property", 
+    "Family Law & Divorce", 
+    "Corporate & Business", 
+    "Criminal Defense", 
+    "Civil Litigation", 
+    "Intellectual Property"
+  ];
 
+  // Helper: Generates next 7 days starting from today
+  const getNextSevenDays = () => {
+    const dates = [];
+    const locale = "en-US";
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      dates.push({
+        fullDate: d.toISOString().split('T')[0],
+        dayName: d.toLocaleDateString(locale, { weekday: 'short' }),
+        dayNum: d.getDate(),
+        month: d.toLocaleDateString(locale, { month: 'short' })
+      });
+    }
+    return dates;
+  };
+
+  const datesList = getNextSevenDays();
+  const timeSlots = ["09:30 AM", "11:00 AM", "01:30 PM", "03:00 PM", "04:30 PM", "06:00 PM"];
+
+  // Filter & Search Logic
   const filteredLawyers = mockLawyers.filter(lawyer => {
     const matchesSearch = lawyer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           lawyer.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,20 +143,78 @@ export default function HireLawyer() {
     return matchesSearch && matchesFilter;
   });
 
-  const handleBookConsultancy = (lawyerName) => {
-    alert(`Consultancy booking initiated with ${lawyerName}. This feature is coming soon!`);
+  // Modal Open Handler
+  const handleOpenBooking = (lawyer) => {
+    setSelectedLawyer(lawyer);
+    setSelectedDate(datesList[0].fullDate);
+    setSelectedTime(timeSlots[0]);
+    setCaseDescription('');
+    setAttachDocument(false);
+    setBookingComplete(false);
+    setIsModalOpen(true);
+  };
+
+  // Submit Booking Form
+  const handleConfirmBooking = (e) => {
+    e.preventDefault();
+    if (!selectedDate || !selectedTime) return;
+
+    // Generate meeting ID and random ticket token
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const meetingCode = `NV-${randomId}-${selectedLawyer.name.split(' ').pop().toUpperCase()}`;
+    
+    const formattedDate = new Date(selectedDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const newBooking = {
+      id: Date.now(),
+      meetingCode,
+      lawyer: selectedLawyer,
+      date: formattedDate,
+      rawDate: selectedDate,
+      time: selectedTime,
+      description: caseDescription,
+      attachedContext: attachDocument ? "NyayaVanni_Extracted_Context.pdf" : null,
+      bookedAt: new Date().toLocaleDateString()
+    };
+
+    // Save state and localStorage
+    const updatedBookings = [newBooking, ...activeBookings];
+    setActiveBookings(updatedBookings);
+    localStorage.setItem('nyayavanni_consultations', JSON.stringify(updatedBookings));
+
+    setCurrentTicket(newBooking);
+    setBookingComplete(true);
+  };
+
+  // Remove Booking Helper
+  const handleCancelBooking = (bookingId) => {
+    if (confirm("Are you sure you want to cancel this consultation booking?")) {
+      const filtered = activeBookings.filter(b => b.id !== bookingId);
+      setActiveBookings(filtered);
+      localStorage.setItem('nyayavanni_consultations', JSON.stringify(filtered));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative pb-12">
-      <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+    <div className="min-h-screen bg-slate-50 relative pb-16 font-sans">
+      
+      {/* Decorative top blur for premium aura background styling */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+      <div className="absolute top-20 right-1/4 w-80 h-80 bg-slate-200 rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+
+      <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-20 shadow-sm border-slate-200">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-800 cursor-pointer" onClick={() => navigate('/')}>
-              <Scale className="text-nyaya-500 w-6 h-6" /> NyayaVanni
+              <Scale className="text-blue-600 w-6 h-6" /> NyayaVanni
             </div>
           </div>
           <div className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full hidden sm:block">
@@ -105,11 +223,64 @@ export default function HireLawyer() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 mt-8">
+      <main className="max-w-7xl mx-auto px-6 mt-8 relative z-10">
+        
+        {/* Title Section */}
         <div className="mb-10 text-center max-w-2xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">{t("lawyers.title")}</h1>
-          <p className="text-lg text-slate-600">{t("lawyers.disclaimer")}</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">
+            Find & Consult Top Legal Experts
+          </h1>
+          <p className="text-lg text-slate-600">
+            Consult experienced Indian attorneys verified by NyayaVanni to guide you through legal proceedings.
+          </p>
         </div>
+
+        {/* Dynamic State: Bookings Summary Bar */}
+        {activeBookings.length > 0 && (
+          <div className="mb-8 bg-white border border-slate-200 p-5 rounded-2xl shadow-sm transition-all duration-300">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Bookmark className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-bold text-slate-800">Your Active Consultations</h2>
+              </div>
+              <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                {activeBookings.length} Scheduled
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeBookings.map(booking => (
+                <div key={booking.id} className="group relative bg-slate-50 hover:bg-slate-100/70 border border-slate-200 p-4 rounded-xl flex items-center gap-4 transition-all">
+                  <img 
+                    src={booking.lawyer.image} 
+                    alt={booking.lawyer.name} 
+                    className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-slate-800 truncate">{booking.lawyer.name}</h4>
+                    <p className="text-xs text-slate-500 font-medium truncate">{booking.lawyer.specialty}</p>
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-600 font-semibold">
+                      <span className="flex items-center gap-1">
+                        <CalendarDays className="w-3.5 h-3.5 text-slate-400" /> {booking.date.split(',')[1] || booking.date}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" /> {booking.time}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Subtle Action to Cancel */}
+                  <button 
+                    onClick={() => handleCancelBooking(booking.id)}
+                    className="text-xs text-rose-500 hover:text-rose-700 font-semibold p-1 hover:bg-rose-50 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row gap-4">
@@ -120,15 +291,15 @@ export default function HireLawyer() {
               placeholder={t("lawyers.search")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-nyaya-500 focus:bg-white transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-colors text-sm"
             />
           </div>
           <div className="relative md:w-64">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
             <select 
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-nyaya-500 focus:bg-white cursor-pointer transition-colors"
+              className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer transition-colors text-sm"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
@@ -147,47 +318,324 @@ export default function HireLawyer() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredLawyers.map(lawyer => (
-              <div key={lawyer.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all group">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shrink-0">
-                     <img src={lawyer.image} alt={lawyer.name} className="w-full h-full object-cover" />
+              <div key={lawyer.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all group flex flex-col justify-between">
+                <div>
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shrink-0">
+                       <img src={lawyer.image} alt={lawyer.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{lawyer.name}</h3>
+                      <p className="text-sm font-semibold text-blue-600">{lawyer.specialty}</p>
+                      <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <span className="font-semibold text-slate-700">{lawyer.rating}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-nyaya-600 transition-colors">{lawyer.name}</h3>
-                    <p className="text-sm font-medium text-nyaya-600">{lawyer.specialty}</p>
-                    <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      <span className="font-semibold text-slate-700">{lawyer.rating}</span>
+
+                  <div className="space-y-2 mb-6 text-sm text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-400" />
+                      {lawyer.location}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-slate-400" />
+                      {lawyer.experience} Experience
+                    </div>
+                    <div className="flex items-center gap-2 font-bold text-slate-800 mt-2 pt-2 border-t">
+                      {lawyer.fee}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 mb-6 text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    {lawyer.location}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-slate-400" />
-                    {lawyer.experience} Experience
-                  </div>
-                  <div className="flex items-center gap-2 font-semibold text-slate-800 mt-2 pt-2 border-t">
-                    {lawyer.fee}
-                  </div>
-                </div>
-
                 <button 
-                  onClick={() => handleBookConsultancy(lawyer.name)}
-                  className="w-full bg-slate-900 hover:bg-nyaya-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  onClick={() => handleOpenBooking(lawyer)}
+                  className="w-full bg-slate-900 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
-                  <Calendar className="w-4 h-4" /> {t("lawyers.book")}
+                  <Calendar className="w-4 h-4" /> Request Consultation
                 </button>
               </div>
             ))}
           </div>
         )}
-
       </main>
+
+      {/* =================================================================== */}
+      {/* GLASSMORPHIC BOOKING MODAL & INTERACTIVE STUB TICKET */}
+      {/* =================================================================== */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          
+          {/* Translucent overlay background */}
+          <div 
+            onClick={() => setIsModalOpen(false)}
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300"
+          ></div>
+
+          {/* Modal Card */}
+          <div className="relative w-full max-w-xl bg-white/95 border border-white/20 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden transition-all transform scale-100 flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Scale className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-lg">Consultation Scheduler</h3>
+                  <p className="text-xs text-slate-500 font-semibold">NyayaVanni Instant Match</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              
+              {!bookingComplete ? (
+                // STATE 1: Booking Scheduler Form
+                <form onSubmit={handleConfirmBooking} className="space-y-6">
+                  
+                  {/* Lawyer Card Summary */}
+                  <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex gap-4 items-center">
+                    <img 
+                      src={selectedLawyer.image} 
+                      alt={selectedLawyer.name} 
+                      className="w-12 h-12 rounded-full object-cover border" 
+                    />
+                    <div>
+                      <h4 className="font-bold text-slate-800">{selectedLawyer.name}</h4>
+                      <p className="text-xs font-semibold text-blue-600">{selectedLawyer.specialty}</p>
+                      <p className="text-xs font-semibold text-slate-500 mt-0.5">{selectedLawyer.fee}</p>
+                    </div>
+                  </div>
+
+                  {/* 1. Date Selector (Horizontal cards) */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                      Select Date Slot
+                    </label>
+                    <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
+                      {datesList.map((dateObj) => {
+                        const isSelected = selectedDate === dateObj.fullDate;
+                        return (
+                          <button
+                            key={dateObj.fullDate}
+                            type="button"
+                            onClick={() => setSelectedDate(dateObj.fullDate)}
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl border shrink-0 w-16 transition-all ${
+                              isSelected 
+                                ? 'bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10' 
+                                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'
+                            }`}
+                          >
+                            <span className="text-[10px] uppercase font-bold tracking-wider">{dateObj.dayName}</span>
+                            <span className="text-lg font-extrabold my-0.5 leading-none">{dateObj.dayNum}</span>
+                            <span className="text-[9px] uppercase font-semibold">{dateObj.month}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Time Slot Chips */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                      Select Available Time
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {timeSlots.map((time) => {
+                        const isSelected = selectedTime === time;
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            onClick={() => setSelectedTime(time)}
+                            className={`py-2.5 rounded-xl border text-center text-xs font-bold transition-all ${
+                              isSelected
+                                ? 'bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10'
+                                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Attach Document Context Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                      Legal Context
+                    </label>
+                    <div 
+                      onClick={() => setAttachDocument(!attachDocument)}
+                      className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                        attachDocument 
+                          ? 'bg-blue-50/50 border-blue-200 shadow-sm' 
+                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                        attachDocument ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {attachDocument && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <FileText className={`w-4 h-4 ${attachDocument ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <h5 className="text-xs font-bold text-slate-800">Attach Document Analysis</h5>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-semibold mt-1">
+                          Share your active analyzed legal document automatically with Adv. {selectedLawyer.name.split(' ').pop()} for instant briefing.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Case Summary Input */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                      Case Summary or Questions
+                    </label>
+                    <textarea
+                      placeholder="Briefly describe your case or outline the questions you want to ask..."
+                      value={caseDescription}
+                      onChange={(e) => setCaseDescription(e.target.value)}
+                      rows={3}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-xs font-medium"
+                    ></textarea>
+                  </div>
+
+                  {/* CTA Submit */}
+                  <button
+                    type="submit"
+                    className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    Confirm Consultation Booking
+                  </button>
+
+                </form>
+              ) : (
+                
+                // STATE 2: Virtual Digital Ticket Confirmation Stub
+                <div className="space-y-6 flex flex-col items-center">
+                  
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 animate-pulse">
+                    <BadgeCheck className="w-8 h-8" />
+                  </div>
+                  
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-slate-900">Appointment Confirmed!</h3>
+                    <p className="text-xs text-slate-500 font-semibold mt-1">Your instant match ticket has been generated below.</p>
+                  </div>
+
+                  {/* Glass Ticket Stub Representation */}
+                  <div className="w-full max-w-sm bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-2xl shadow-xl overflow-hidden relative border border-slate-800">
+                    
+                    {/* Notch Cutouts left/right (Cinema Ticket Stub styling) */}
+                    <div className="absolute w-4 h-4 bg-white/95 rounded-full -left-2 top-1/2 -translate-y-1/2 border-r border-slate-800"></div>
+                    <div className="absolute w-4 h-4 bg-white/95 rounded-full -right-2 top-1/2 -translate-y-1/2 border-l border-slate-800"></div>
+
+                    {/* Ticket TOP Portion */}
+                    <div className="p-5 border-b border-dashed border-slate-800 pb-6 relative">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-[10px] tracking-widest font-black uppercase text-blue-400">NYAYAVANNI TICKET</span>
+                        <span className="text-[10px] font-mono text-slate-400 uppercase">{currentTicket.meetingCode}</span>
+                      </div>
+                      
+                      <div className="flex gap-4 items-center mb-5">
+                        <img 
+                          src={currentTicket.lawyer.image} 
+                          alt={currentTicket.lawyer.name} 
+                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-500/20" 
+                        />
+                        <div>
+                          <h4 className="font-extrabold text-sm">{currentTicket.lawyer.name}</h4>
+                          <p className="text-[11px] text-blue-400 font-bold uppercase">{currentTicket.lawyer.specialty}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block uppercase">Date</span>
+                          <span className="font-semibold text-slate-200">{currentTicket.date.split(',')[1] || currentTicket.date}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block uppercase">Time Slot</span>
+                          <span className="font-semibold text-slate-200">{currentTicket.time}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ticket BOTTOM Portion */}
+                    <div className="p-5 pt-6 bg-slate-950/70">
+                      <div className="flex justify-between items-center">
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-slate-500 font-bold block uppercase">Legal Briefing</span>
+                          <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                            {currentTicket.attachedContext ? (
+                              <>
+                                <BadgeCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Context Attached
+                              </>
+                            ) : (
+                              <>
+                                <BadgeAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" /> No Context
+                              </>
+                            )}
+                          </span>
+                        </div>
+                        
+                        {/* Fake barcode styling representation for professional UI feedback */}
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex gap-0.5">
+                            {[1, 3, 2, 4, 1, 3, 1, 2, 4, 2, 3, 1, 4].map((w, idx) => (
+                              <div 
+                                key={idx} 
+                                className="bg-slate-400" 
+                                style={{ width: `${w}px`, height: '24px' }}
+                              ></div>
+                            ))}
+                          </div>
+                          <span className="text-[8px] font-mono text-slate-500">MEMBER SLOT</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 w-full max-w-sm">
+                    <button
+                      onClick={() => {
+                        alert("Adding to Google Calendar... Done!");
+                      }}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <CalendarDays className="w-4 h-4 text-slate-500" /> Add to Calendar
+                    </button>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="flex-1 bg-slate-900 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs"
+                    >
+                      Dismiss Ticket
+                    </button>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
