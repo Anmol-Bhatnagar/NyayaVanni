@@ -5,6 +5,7 @@ import logging
 
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request
 
+from services.document_classifier import classify_document
 from services.knowledge_graph_service import LegalKnowledgeGraphBuilder
 from services.storage_service import (
     upload_to_local,
@@ -150,10 +151,9 @@ async def analyze_document(request: Request, document_id: str, language: str = "
         else:
             contents = await file.read()
             filename = file.filename
-
-        # 1. OCR Extraction
-        text = extract_document(contents, filename, force_ocr=force_ocr)
-
+setAnalysis(data.analysis);
+setClassification(data.classification);
+setKnowledgeGraph(data.knowledge_graph);
         # 2. RAG Retrieval
         relevant_laws = retrieve_relevant_laws(text, k=3)
 
@@ -178,7 +178,8 @@ async def analyze_document(request: Request, document_id: str, language: str = "
         return {
             "documentId": document_id,
             "analysis": analysis_result,
-            "knowledge_graph": knowledge_graph,
+"classification": classification,   # NEW
+"knowledge_graph": knowledge_graph,
             "extracted_text": text[:500] + "...",
             "cached": False
         }

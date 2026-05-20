@@ -26,6 +26,7 @@ const [searchTerm, setSearchTerm] = useState('');
 const [selectedType, setSelectedType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [classification, setClassification] = useState(null);
   const [chatHistory, setChatHistory] = useState([
     { role: 'assistant', message: 'I have analyzed your document. How can I help you understand it better?' }
   ]);
@@ -57,7 +58,8 @@ const [selectedType, setSelectedType] = useState('all');
           throw new Error(errData.detail || "Analysis request failed");
         }
         const data = await response.json();
-        setAnalysis(data.analysis);
+setAnalysis(data.analysis);
+setClassification(data.classification);
 setKnowledgeGraph(data.knowledge_graph);
       } catch (err) {
         console.error(err);
@@ -247,6 +249,28 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
               <div>
                 <span className="text-sm font-bold tracking-wider uppercase text-nyaya-600 mb-1 block">{t("dashboard.doctype")}</span>
                 <h1 className="text-3xl font-bold text-slate-900">{analysis?.document_type || "Unknown Document"}</h1>
+                {classification && (
+  <div className="mt-3 p-3 rounded-xl border bg-blue-50 border-blue-200">
+    <div className="text-sm font-bold text-blue-700">
+      Detected Type: {classification.predicted_type}
+    </div>
+
+    <div className="text-xs text-slate-600 mt-1">
+      Confidence: {(classification.confidence * 100).toFixed(1)}%
+    </div>
+
+    <div className="mt-2 text-xs text-slate-500">
+      Alternatives:
+      <ul className="list-disc ml-5 mt-1">
+        {classification.alternatives?.map((alt, i) => (
+          <li key={i}>
+            {alt.type} → {(alt.score * 100).toFixed(0)}%
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+)}
               </div>
               <div className={`px-4 py-2 rounded-xl flex items-center gap-2 border font-bold ${getRiskColor(analysis?.risk_level)}`}>
                 <AlertTriangle className="w-5 h-5" />
