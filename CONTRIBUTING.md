@@ -189,4 +189,3 @@ This project is made possible by all the amazing people who contribute!
 
 [![NyayaVanni Contributors](https://contrib.rocks/image?repo=choudharyms/NyayaVanni)](https://github.com/choudharyms/NyayaVanni/graphs/contributors)
 
-*Made with [contrib.rocks](https://contrib.rocks).*
