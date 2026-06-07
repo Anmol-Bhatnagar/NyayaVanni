@@ -16,6 +16,7 @@ if not api_key or not api_key.strip():
         "GEMINI_API_KEY environment variable is not set or empty. "
         "RAG features will be unavailable until configured."
     )
+
 else:
     genai.configure(api_key=api_key)
 

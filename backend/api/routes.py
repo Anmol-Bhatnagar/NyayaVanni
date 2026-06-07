@@ -155,7 +155,7 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
         record = require_document_owner(document_id, session_id)
 
         if not force_ocr:
-            cached = get_cached_analysis(document_id, language)
+            cached = get_cached_analysis(document_id, session_id, language)
             if cached:
                 logger.info(f"Cache HIT for document {document_id}")
                 knowledge_graph = graph_builder.generate_graph(cached["extracted_text"])
@@ -195,7 +195,13 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
         )
         classification = classify_document(text)
         knowledge_graph = graph_builder.generate_graph(text)
-        save_cached_analysis(document_id, language, text, analysis_result)
+        save_cached_analysis(
+            document_id,
+            session_id,
+            language,
+            text,
+            analysis_result
+        )
 
         return {
         "documentId": document_id,
@@ -232,6 +238,7 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
         if "fitz" in str(e.__class__) or "FileDataError" in type(e).__name__:
             raise HTTPException(status_code=400, detail="The uploaded document is corrupted or could not be parsed.")
 
+        raise HTTPException(status_code=500, detail="Document analysis failed")
 
 @api_router.post("/chat/general")
 @limiter.limit(RATE_LIMIT_CHAT)
@@ -265,8 +272,7 @@ def chat_with_document(request: Request, document_id: str, chat_request: ChatReq
     try:
         session_id = require_session_id(request)
         require_document_owner(document_id, session_id)
-
-        cached = get_cached_analysis(document_id, chat_request.language)
+        cached = get_cached_analysis(document_id, session_id, chat_request.language)
         analysis = cached["analysis"] if cached else {}
 
         history = [
