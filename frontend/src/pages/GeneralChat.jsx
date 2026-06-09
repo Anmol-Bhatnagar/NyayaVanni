@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Bot, User, Send, ArrowLeft, Scale, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -173,7 +173,7 @@ export default function GeneralChat() {
         }
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
       let errorMessage =
         "I'm having trouble connecting to the server. Please try again later.";
@@ -261,13 +261,19 @@ export default function GeneralChat() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/")}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
               aria-label="Go back home"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-850 dark:text-white">
-              <Scale className="text-nyaya-500 w-6 h-6" /> NyayaVanni{" "}
+            <div
+              className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-850 dark:text-white cursor-pointer"
+              onClick={() => navigate("/")}
+            >
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-nyaya-500/15 border border-nyaya-500/25">
+                <Scale className="text-nyaya-500 w-5 h-5" />
+              </span>
+              <span>Nyaya<span className="text-nyaya-500">Vanni</span></span>
               <span className="text-slate-400 dark:text-slate-500 font-medium hidden sm:inline">
                 | Assistant
               </span>
@@ -276,7 +282,7 @@ export default function GeneralChat() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleDownload}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
               title="Download Chat History"
             >
               <Download className="w-5 h-5" />
@@ -394,7 +400,7 @@ export default function GeneralChat() {
                     focus:bg-white dark:focus:bg-slate-950
                     focus:border-nyaya-500
                     focus:ring-4 focus:ring-nyaya-500/10
-                    rounded-3xl
+                    rounded-xl
                     px-5 sm:px-6
                     py-3
                     outline-none
@@ -407,7 +413,7 @@ export default function GeneralChat() {
                 <button
                   type="submit"
                   disabled={chatLoading || !chatInput.trim()}
-                  className="bg-nyaya-600 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center hover:bg-nyaya-500 hover:shadow-lg transition-all disabled:opacity-40 disabled:hover:shadow-none shrink-0 cursor-pointer"
+                  className="bg-nyaya-600 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center hover:bg-nyaya-500 hover:shadow-lg transition-all disabled:opacity-40 disabled:hover:shadow-none shrink-0 cursor-pointer"
                 >
                   <Send className="text-center w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -415,7 +421,7 @@ export default function GeneralChat() {
             </div>
           </div>
 
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 shrink-0 pb-6">
+          <div className="w-full shrink-0">
             <Footer />
           </div>
         </main>
@@ -423,3 +429,4 @@ export default function GeneralChat() {
     </div>
   );
 }
+
