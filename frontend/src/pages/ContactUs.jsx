@@ -269,7 +269,7 @@ export default function ContactUs() {
         </main>
       </div>
 
-      <section className="z-10 w-full px-6 pb-16 mx-auto max-w-7xl">
+      <section className="z-10 w-full">
         <Footer />
       </section>
     </div>
