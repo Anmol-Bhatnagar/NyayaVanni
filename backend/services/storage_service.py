@@ -224,13 +224,13 @@ def delete_document_and_cache(doc_id: str) -> bool:
 def delete_document_history(session_id: str) -> int:
     """Delete all documents and their analyses for a specific session ID"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = _connect_db()
         cursor = conn.cursor()
-        
+
         # Get all documents for this session to delete files
         cursor.execute("SELECT document_id, local_path FROM documents WHERE session_id = ?", (session_id,))
         docs = cursor.fetchall()
-        
+
         # Delete local files
         for doc_id, local_path in docs:
             if local_path and os.path.exists(local_path):
@@ -238,11 +238,11 @@ def delete_document_history(session_id: str) -> int:
                     os.remove(local_path)
                 except OSError as exc:
                     logger.warning(f"Failed to delete local file {local_path} during history clear: {exc}")
-                    
+
         # Delete from DB
         cursor.execute("DELETE FROM document_analysis_cache WHERE document_id IN (SELECT document_id FROM documents WHERE session_id = ?)", (session_id,))
         cursor.execute("DELETE FROM documents WHERE session_id = ?", (session_id,))
-        
+
         deleted_count = cursor.rowcount
         conn.commit()
         conn.close()
@@ -258,14 +258,14 @@ async def cleanup_expired_documents():
             logger.info("Running expired documents cleanup task...")
             # Calculate threshold: 24 hours ago
             threshold = (datetime.utcnow() - timedelta(hours=24)).isoformat()
-            
+
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
-            
+
             # Find expired documents
             cursor.execute("SELECT document_id, local_path FROM documents WHERE uploaded_at < ?", (threshold,))
             expired_docs = cursor.fetchall()
-            
+
             for doc_id, local_path in expired_docs:
                 logger.info(f"Deleting expired document: {doc_id}")
                 # Delete local file
@@ -274,22 +274,22 @@ async def cleanup_expired_documents():
                         os.remove(local_path)
                     except OSError as exc:
                         logger.warning(f"Failed to delete file {local_path}: {exc}")
-                
+
                 # Delete from document_analysis_cache
                 cursor.execute("DELETE FROM document_analysis_cache WHERE document_id = ?", (doc_id,))
-                
+
                 # Delete from documents table
                 cursor.execute("DELETE FROM documents WHERE document_id = ?", (doc_id,))
-            
+
             conn.commit()
             conn.close()
-            
+
             if expired_docs:
                 logger.info(f"Cleaned up {len(expired_docs)} expired documents.")
-                
+
         except Exception as e:
             logger.error(f"Error during document cleanup: {e}")
-            
+
         # Sleep for 1 hour before next cleanup
         await asyncio.sleep(3600)
 

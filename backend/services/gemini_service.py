@@ -9,7 +9,7 @@ from datetime import date
 
 from dotenv import load_dotenv
 
-from models.llm_schemas import DocumentAnalysis
+from ..models.llm_schemas import DocumentAnalysis
 
 load_dotenv()
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,7 +18,11 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { FixedSizeGrid } from "react-window";
+import { FixedSizeList as List } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 import ThemeToggle from "../components/ThemeToggle";
+import Breadcrumb from "../components/Breadcrumb";
 import Footer from "../components/Footer";
 
 export default function HireLawyer() {
@@ -59,7 +63,7 @@ export default function HireLawyer() {
         specialty: "Real Estate & Property",
         experience: "15 Years",
         location: "New Delhi, Delhi",
-        fee: "₹2,000/Consultation",
+        fee: "â‚¹2,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -69,7 +73,7 @@ export default function HireLawyer() {
         specialty: "Family Law & Divorce",
         experience: "12 Years",
         location: "Mumbai, Maharashtra",
-        fee: "₹2,500/Consultation",
+        fee: "â‚¹2,500/Consultation",
         image:
           "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -79,7 +83,7 @@ export default function HireLawyer() {
         specialty: "Corporate & Business",
         experience: "20 Years",
         location: "Bengaluru, Karnataka",
-        fee: "₹5,000/Consultation",
+        fee: "â‚¹5,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -89,7 +93,7 @@ export default function HireLawyer() {
         specialty: "Criminal Defense",
         experience: "8 Years",
         location: "Pune, Maharashtra",
-        fee: "₹1,500/Consultation",
+        fee: "â‚¹1,500/Consultation",
         image:
           "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -99,7 +103,7 @@ export default function HireLawyer() {
         specialty: "Civil Litigation",
         experience: "18 Years",
         location: "Chennai, Tamil Nadu",
-        fee: "₹3,000/Consultation",
+        fee: "â‚¹3,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -109,7 +113,7 @@ export default function HireLawyer() {
         specialty: "Intellectual Property",
         experience: "10 Years",
         location: "Hyderabad, Telangana",
-        fee: "₹4,000/Consultation",
+        fee: "â‚¹4,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -222,7 +226,7 @@ export default function HireLawyer() {
   };
 
   return (
-    <div className="relative min-h-screen pb-16 overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
       {/* Background gradients (match LandingPage) */}
       <div className="absolute top-[-10%] left-[-10%] w-[55%] h-[55%] bg-nyaya-500/10 dark:bg-nyaya-500/25 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
       <div className="absolute bottom-[-12%] right-[-12%] w-[60%] h-[60%] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[160px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
@@ -256,6 +260,9 @@ export default function HireLawyer() {
             </div>
             <ThemeToggle />
           </div>
+        </div>
+        <div className="px-6 py-2 mx-auto max-w-7xl border-t border-slate-100 dark:border-white/5">
+          <Breadcrumb />
         </div>
       </nav>
 
@@ -377,7 +384,7 @@ export default function HireLawyer() {
                 </select>
 
                 <div className="absolute inset-y-0 flex items-center pointer-events-none right-4 text-slate-400 dark:text-slate-500">
-                  ▾
+                  â–¾
                 </div>
               </div>
             </div>
@@ -491,7 +498,7 @@ export default function HireLawyer() {
         )}
       </main>
 
-      <section className="z-10 w-full px-6 pb-16 mx-auto max-w-7xl">
+      <section className="z-10 w-full">
         <Footer />
       </section>
 
@@ -755,3 +762,5 @@ export default function HireLawyer() {
     </div>
   );
 }
+
+
