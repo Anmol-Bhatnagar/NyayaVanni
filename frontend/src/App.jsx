@@ -16,6 +16,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ConversationHistoryProvider } from './contexts/ConversationHistoryContext';
 import { Globe } from 'lucide-react';
 import NotFound from "./pages/NotFound";
+import BackToTop from './components/Backtotop';
 
 const LanguageToggle = () => {
   const { language, toggleLanguage } = useLanguage();
@@ -53,7 +54,7 @@ function App() {
               <Route path="/version-diff" element={<VersionDiff />} />
               <Route path="/*" element={<NotFound />} />
             </Routes>
-            
+            <BackToTop/>
             {/* Pinned Controls Layout */}
             <div className="fixed bottom-6 right-6 z-50">
               <LanguageToggle />
