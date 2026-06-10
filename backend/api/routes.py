@@ -13,9 +13,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from services.document_classifier import classify_document
-from services.knowledge_graph_service import LegalKnowledgeGraphBuilder
-from services.storage_service import (
+from ..services.document_classifier import classify_document
+from ..services.knowledge_graph_service import LegalKnowledgeGraphBuilder
+from ..services.storage_service import (
     upload_to_local,
     save_document_record,
     get_document_record,
@@ -25,13 +25,13 @@ from services.storage_service import (
     delete_document_and_cache,
     UPLOAD_DIR
 )
-from services.ocr_service import extract_document
-from services.rag_service import retrieve_relevant_laws
-from services.gemini_service import analyze_document_with_gemini, generate_chat_response, stream_chat_response
-from services.search_service import search_documents, index_document, remove_document_from_index
-from models.schemas import ChatRequest, ChatResponse, ContactRequest
-from services.confidence_service import ConfidenceService
-from config.rate_limits import CONTACT_RATE_LIMIT, UPLOAD_RATE_LIMIT
+from ..services.ocr_service import extract_document
+from ..services.rag_service import retrieve_relevant_laws
+from ..services.gemini_service import analyze_document_with_gemini, generate_chat_response, stream_chat_response
+from ..services.search_service import search_documents, index_document, remove_document_from_index
+from ..models.schemas import ChatRequest, ChatResponse, ContactRequest
+from ..services.confidence_service import ConfidenceService
+from ..config.rate_limits import CONTACT_RATE_LIMIT, UPLOAD_RATE_LIMIT
 logger = logging.getLogger(__name__)
 
 api_router = APIRouter()
@@ -51,8 +51,8 @@ RATE_LIMIT_CHAT    = os.getenv("RATE_LIMIT_CHAT",    "30/minute")
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB limit
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx'}
 ALLOWED_MIME_TYPES = {
-    'application/pdf', 
-    'image/png', 
+    'application/pdf',
+    'image/png',
     'image/jpeg',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 }
