@@ -1,4 +1,4 @@
-import os
+﻿import os
 import uuid
 import logging
 import io
@@ -28,15 +28,17 @@ from services.storage_service import (
 from services.ocr_service import extract_document
 from services.rag_service import retrieve_relevant_laws
 from services.gemini_service import analyze_document_with_gemini, generate_chat_response, stream_chat_response
-from models.schemas import ChatRequest, ChatResponse
-
+from services.search_service import search_documents, index_document, remove_document_from_index
+from models.schemas import ChatRequest, ChatResponse, ContactRequest
+from services.confidence_service import ConfidenceService
+from config.rate_limits import CONTACT_RATE_LIMIT, UPLOAD_RATE_LIMIT
 logger = logging.getLogger(__name__)
 
 api_router = APIRouter()
 graph_builder = LegalKnowledgeGraphBuilder()
 
 # ---------------------------------------------------------------------------
-# Rate limiter — keyed by client IP.
+# Rate limiter â€” keyed by client IP.
 # Override defaults via env vars:
 #   RATE_LIMIT_ANALYZE  (default: 10/minute)  heavy Gemini + OCR call
 #   RATE_LIMIT_CHAT     (default: 30/minute)  streaming chat call
@@ -80,6 +82,23 @@ def require_document_owner(document_id: str, session_id: str) -> dict:
     return record
 
 
+@api_router.post("/contact")
+@limiter.limit(CONTACT_RATE_LIMIT)
+async def contact_us(request: Request, body: ContactRequest):
+    """Receive contact form submissions with IP-based rate limiting."""
+    logger.info(
+        "Contact submission from %s: name=%s email=%s subject=%s",
+        request.client.host if request.client else "unknown",
+        body.name,
+        body.email,
+        body.subject,
+    )
+    return {
+        "status": "ok",
+        "message": "Thank you for reaching out. We will get back to you shortly."
+    }
+
+
 @api_router.get("/session")
 async def create_session(request: Request, response: Response):
     session_id = request.cookies.get("session_id")
@@ -97,6 +116,7 @@ async def create_session(request: Request, response: Response):
 
 
 @api_router.post("/upload")
+@limiter.limit(UPLOAD_RATE_LIMIT)
 async def upload_document(request: Request, file: UploadFile = File(...)):
     """Upload document and return documentId"""
     try:
@@ -153,7 +173,7 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
         record = require_document_owner(document_id, session_id)
 
         if not force_ocr:
-            cached = get_cached_analysis(document_id, language)
+            cached = get_cached_analysis(document_id, session_id, language)
             if cached:
                 logger.info(f"Cache HIT for document {document_id}")
                 knowledge_graph = graph_builder.generate_graph(cached["extracted_text"])
@@ -180,20 +200,36 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
             filename = file.filename
 
         text = extract_document(contents, filename, force_ocr=force_ocr, language=language)
+
+        # Index document content for full-text search
+        index_document(document_id, filename, text)
+
         relevant_laws = retrieve_relevant_laws(text, k=3)
         analysis_result = analyze_document_with_gemini(text, relevant_laws, language)
+        confidence = ConfidenceService.generate(
+            document_text=text,
+            summary=analysis_result.get("summary", ""),
+            relevant_laws=relevant_laws
+        )
         classification = classify_document(text)
         knowledge_graph = graph_builder.generate_graph(text)
-        save_cached_analysis(document_id, language, text, analysis_result)
+        save_cached_analysis(
+            document_id,
+            session_id,
+            language,
+            text,
+            analysis_result
+        )
 
         return {
-            "documentId": document_id,
-            "analysis": analysis_result,
-            "classification": classification,
-            "knowledge_graph": knowledge_graph,
-            "extracted_text": text[:500] + "...",
-            "cached": False
-        }
+        "documentId": document_id,
+        "analysis": analysis_result,
+        "confidence": confidence,
+        "classification": classification,
+        "knowledge_graph": knowledge_graph,
+        "extracted_text": text[:500] + "...",
+        "cached": False
+    }
 
     except RateLimitExceeded:
         raise
@@ -220,11 +256,63 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
         if "fitz" in str(e.__class__) or "FileDataError" in type(e).__name__:
             raise HTTPException(status_code=400, detail="The uploaded document is corrupted or could not be parsed.")
 
+        raise HTTPException(status_code=500, detail="Document analysis failed")
+
+@api_router.get("/chat/stream")
+@limiter.limit(RATE_LIMIT_CHAT)
+def chat_stream_sse(
+    request: Request,
+    user_message: str,
+    language: str = "en",
+    document_id: str = None
+):
+    """
+    SSE endpoint for real-time token-by-token streaming.
+    Returns text/event-stream for EventSource-compatible clients.
+    Usage: GET /chat/stream?user_message=hello&language=en
+    """
+    import json as _json
+
+    if not user_message or not user_message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    analysis = {}
+    if document_id:
+        try:
+            session_id = require_session_id(request)
+            require_document_owner(document_id, session_id)
+            cached = get_cached_analysis(document_id, session_id, language)
+            if cached:
+                analysis = cached.get("analysis", {})
+        except HTTPException:
+            pass
+
+    def event_generator():
+        try:
+            for chunk in stream_chat_response(analysis, [], user_message, language):
+                # SSE format: data: <payload>\n\n
+                yield f"data: {_json.dumps({'text': chunk})}\n\n"
+            # Signal stream end
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            logger.error(f"SSE stream error: {e}")
+            yield f"data: {_json.dumps({'error': 'Stream failed'})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        }
+    )
+
 
 @api_router.post("/chat/general")
 @limiter.limit(RATE_LIMIT_CHAT)
 def chat_general(request: Request, chat_request: ChatRequest):
-    """General legal chat — no document context."""
+    """General legal chat â€” no document context."""
     try:
         if not chat_request.user_message or not chat_request.user_message.strip():
             raise HTTPException(status_code=400, detail="Message cannot be empty")
@@ -253,12 +341,20 @@ def chat_with_document(request: Request, document_id: str, chat_request: ChatReq
     try:
         session_id = require_session_id(request)
         require_document_owner(document_id, session_id)
-
-        cached = get_cached_analysis(document_id, chat_request.language)
+        cached = get_cached_analysis(document_id, session_id, chat_request.language)
         analysis = cached["analysis"] if cached else {}
 
-        history = [{"role": msg.role, "message": msg.message} for msg in chat_request.chat_history]
-        generator = stream_chat_response(analysis, history, chat_request.user_message, chat_request.language)
+        history = [
+            {"role": msg.role, "message": msg.message}
+            for msg in chat_request.chat_history
+        ]
+
+        generator = stream_chat_response(
+            analysis,
+            history,
+            chat_request.user_message,
+            chat_request.language
+        )
 
         return StreamingResponse(generator, media_type="text/plain")
 
@@ -266,13 +362,15 @@ def chat_with_document(request: Request, document_id: str, chat_request: ChatReq
         raise
     except HTTPException as http_err:
         raise http_err
+
     except Exception as e:
         logger.error(f"Chat failed for document {document_id}: {e}")
         raise HTTPException(status_code=500, detail="Chat generation failed")
 
 
 @api_router.post("/generate-document")
-def generate_document(request: DocumentGenerationRequest):
+@limiter.limit("10/minute")
+def generate_document(request: Request, payload: DocumentGenerationRequest):
     """Generates a standard NDA document as a PDF based on provided details."""
     try:
         buffer = io.BytesIO()
@@ -286,14 +384,14 @@ def generate_document(request: DocumentGenerationRequest):
         text = c.beginText(50, height - 100)
 
         template_text = (
-            f"This Non-Disclosure Agreement (the \"Agreement\") is entered into on {request.effective_date} "
-            f"by and between {request.party_one_name} (\"Disclosing Party\") and {request.party_two_name} "
+            f"This Non-Disclosure Agreement (the \"Agreement\") is entered into on {payload.effective_date} "
+            f"by and between {payload.party_one_name} (\"Disclosing Party\") and {payload.party_two_name} "
             f"(\"Receiving Party\").\n\n"
             f"1. Confidential Information: The Receiving Party agrees to keep confidential any proprietary "
             f"information disclosed by the Disclosing Party.\n\n"
             f"2. Consideration: In consideration for the obligations set forth herein, the parties acknowledge "
-            f"the receipt and sufficiency of {request.consideration_amount}.\n\n"
-            f"3. Jurisdiction: This Agreement shall be governed by the laws of {request.jurisdiction}.\n\n"
+            f"the receipt and sufficiency of {payload.consideration_amount}.\n\n"
+            f"3. Jurisdiction: This Agreement shall be governed by the laws of {payload.jurisdiction}.\n\n"
             f"IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written."
         )
 
@@ -334,4 +432,59 @@ async def delete_document(document_id: str, request: Request):
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # Remove document from search index
+    remove_document_from_index(document_id)
+
     return {"documentId": document_id, "deleted": True}
+
+
+@api_router.get("/search")
+def search_documents_endpoint(
+    q: str,
+    page: int = 1,
+    page_size: int = 10
+):
+    """
+    Search indexed documents using full-text search.
+
+    Fast document search with results cached for 1 hour. Queries return
+    in under 500ms using SQLite FTS5 full-text indexing instead of slow
+    LIKE-based table scans.
+
+    Query Parameters:
+    - q: Search query string (required, min 2 chars)
+    - page: Result page number (default: 1)
+    - page_size: Results per page (default: 10, max: 100)
+
+    Returns:
+        - results: List of matching documents
+        - total_count: Total matching documents
+        - page: Current page
+        - page_size: Results per page
+        - from_cache: Whether results came from cache
+    """
+    try:
+        if not q or len(q.strip()) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Search query must be at least 2 characters"
+            )
+
+        if page < 1:
+            page = 1
+        if page_size < 1 or page_size > 100:
+            page_size = 10
+
+        result = search_documents(q, page=page, page_size=page_size, use_cache=True)
+
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+
+        return result
+
+    except HTTPException as http_err:
+        raise http_err
+    except Exception as e:
+        logger.error(f"Search failed: {e}")
+        raise HTTPException(status_code=500, detail="Search operation failed")
+

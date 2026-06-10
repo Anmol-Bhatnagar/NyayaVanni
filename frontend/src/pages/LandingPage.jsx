@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, ShieldCheck, Scale, FileText, ArrowRight, Loader2, Bot, MessageSquare } from 'lucide-react';
+import { UploadCloud, ShieldCheck, Scale, FileText, ArrowRight, Loader2, Bot, MessageSquare, GitCompare, Twitter, Github, Linkedin, Instagram } from 'lucide-react';
+import { UploadCloud, ShieldCheck, Scale, FileText, ArrowRight, Loader2, Bot, MessageSquare, GitCompare,ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ensureSessionId } from '../utils/session';
@@ -16,6 +17,7 @@ export default function LandingPage() {
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { history, clearHistory } = useDocumentHistory();
+  const [openFaq, setOpenFaq] = useState(0);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -71,7 +73,7 @@ export default function LandingPage() {
       // Navigate to Dashboard with the document ID
       navigate(`/dashboard/${data.documentId}`, { state: { file } }); // Pass file for MVP purely to avoid re-downloading if needed
     } catch (error) {
-      console.error(error);
+      //console.error(error);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
       // Check if we're in production but still pointing to localhost
@@ -83,41 +85,46 @@ export default function LandingPage() {
       setTimeout(() => {
         navigate(`/dashboard/demo-doc-123`, { state: { file } });
       }, 1500);
-    }
+    } 
   };
+//  Shared hover styles for footer navigation links
+  const footerLinkClass =
+  " group text-left transition-all duration-300 ease-out hover:text-nyaya-400  hover:translate-x-1 hover:[text-shadow:0_0_4px_rgba(45,212,191,0.4)]";
 
   return (
-    <div className="relative flex flex-col items-center min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div className="relative flex flex-col items-center min-h-screen overflow-x-clip bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
       {/* Background Gradients */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-nyaya-500/10 dark:bg-nyaya-500/30 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[150px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
 
-      <nav className="z-10 flex items-center justify-between w-full px-6 py-6 mx-auto max-w-7xl">
-        <div className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-800 dark:text-white cursor-pointer" onClick={() => navigate('/')}>
-          <Scale className="w-8 h-8 text-nyaya-500" />
-          <span>Nyaya<span className="text-nyaya-500">Vanni</span></span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate('/lawyers')}
-            className="hidden px-5 py-2 font-medium text-slate-700 hover:text-nyaya-600 dark:text-white dark:hover:text-nyaya-400 transition-colors rounded-full sm:block cursor-pointer"
-          >
-            {t("nav.hire")}
-          </button>
-          <button 
-            onClick={() => navigate('/contact')}
-            className="hidden px-5 py-2 font-medium text-slate-700 hover:text-nyaya-600 dark:text-white dark:hover:text-nyaya-400 transition-colors rounded-full sm:block cursor-pointer"
-          >
-            {t("nav.contact")}
-          </button>
-          <button className="px-5 py-2 font-medium text-slate-800 hover:bg-slate-100 dark:text-white dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/10 rounded-full backdrop-blur-md transition-all">
-            {t("nav.signin")}
-          </button>
-          <ThemeToggle />
+      <nav className="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl transition-all duration-300">
+        <div className="flex items-center justify-between w-full px-6 py-6 mx-auto max-w-7xl">
+          <div className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-800 dark:text-white cursor-pointer" onClick={() => navigate('/')}>
+            <Scale className="w-8 h-8 text-nyaya-500" />
+            <span>Nyaya<span className="text-nyaya-500">Vanni</span></span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/lawyers')}
+              className="hidden px-5 py-2 font-medium text-slate-700 hover:text-nyaya-600 dark:text-white dark:hover:text-nyaya-400 transition-colors rounded-full sm:block cursor-pointer"
+            >
+              {t("nav.hire")}
+            </button>
+            <button 
+              onClick={() => navigate('/contact')}
+              className="hidden px-5 py-2 font-medium text-slate-700 hover:text-nyaya-600 dark:text-white dark:hover:text-nyaya-400 transition-colors rounded-full sm:block cursor-pointer"
+            >
+              {t("nav.contact")}
+            </button>
+            <button className="px-5 py-2 font-medium text-slate-800 hover:bg-slate-100 dark:text-white dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/10 rounded-full backdrop-blur-md transition-all">
+              {t("nav.signin")}
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
 
-      <main className="z-10 flex flex-col items-center justify-center flex-1 w-full max-w-5xl px-6 pt-12 pb-24 mx-auto text-center">
+      <main className="z-10 flex flex-col items-center justify-center flex-1 w-full max-w-7xl px-6 pt-12 pb-24 mx-auto text-center">
         <div className="inline-block mb-6 px-4 py-1.5 rounded-full bg-nyaya-500/10 border border-nyaya-500/20 text-nyaya-600 dark:text-nyaya-400 font-medium text-sm animate-pulse-soft">
           Powered by Advanced AI
         </div>
@@ -128,8 +135,8 @@ export default function LandingPage() {
           {t("landing.hero.subtitle")}
         </p>
 
-        {/* Actions Area */}
-        <div className="relative z-10 grid justify-center w-full max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
+        {/* Actions Area — 4-card grid */}
+        <div className="relative z-10 grid justify-center w-full max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           
           {/* Upload Document Card */}
           <div className="relative w-full animate-float group" style={{ animationDelay: '0s' }}>
@@ -244,7 +251,7 @@ export default function LandingPage() {
  
               <h3 className="mb-3 text-2xl font-bold text-slate-850 dark:text-white">Scam Detector</h3>
               <p className="flex-1 max-w-xs mb-8 text-base text-center text-slate-600 dark:text-slate-400">
-                Analyze suspicious legal SMS/WhatsApp/email text and get a risk score + reasons.
+                Analyze suspicious legal SMS, WhatsApp, or email text and get a risk score with clear explanations.
               </p>
  
               <button
@@ -255,6 +262,33 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
+
+          {/* Version Difference Analysis Card */}
+          <div className="relative w-full animate-float group" style={{ animationDelay: '0.6s' }}>
+            <div className="absolute inset-0 transition-all duration-500 transform translate-x-1 translate-y-2 bg-linear-to-r from-blue-500/10 dark:from-blue-500/20 to-violet-500/10 dark:to-violet-500/20 rounded-4xl blur-xl -z-10 group-hover:blur-2xl group-hover:scale-105"></div>
+
+            <div
+              className="flex flex-col items-center justify-center h-full p-10 transition-all duration-300 border-2 cursor-pointer bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-4xl border-slate-200 dark:border-slate-700/50 hover:border-slate-350 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/80 min-h-90 hover:-translate-y-2"
+              onClick={() => navigate('/version-diff')}
+            >
+              <div className="flex items-center justify-center w-16 h-16 mb-6 transition-all duration-300 rounded-full shadow-inner bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 group-hover:scale-110 group-hover:bg-slate-200 dark:group-hover:bg-slate-700">
+                <GitCompare className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:text-violet-600 dark:group-hover:text-violet-300" />
+              </div>
+
+              <h3 className="mb-3 text-2xl font-bold text-slate-850 dark:text-white">Version Diff Analysis</h3>
+              <p className="flex-1 max-w-xs mb-8 text-base text-center text-slate-600 dark:text-slate-400">
+                Compare two document versions. Spot added obligations, higher penalties, reduced rights, and hidden changes.
+              </p>
+
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate('/version-diff'); }}
+                className="w-full sm:w-auto bg-linear-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white px-8 py-3 rounded-full font-semibold transition-all shadow-[0_0_20px_rgba(37,99,235,0.15)] dark:shadow-[0_0_20px_rgba(37,99,235,0.25)] flex items-center justify-center gap-2 hover:scale-105"
+              >
+                Compare Versions <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
         </div>
         {/* Recent Documents History */}
         {history.length > 0 && (
@@ -267,7 +301,8 @@ export default function LandingPage() {
 
 
       {/* FAQ + Footer */}
-      <section className="z-10 w-full px-6 pb-16 mx-auto max-w-7xl">
+      <section className="z-10 w-full pb-0">
+        <div className="w-full px-6 mx-auto max-w-7xl">
         {/* FAQ */}
         <div
           id="faq"
@@ -275,49 +310,66 @@ export default function LandingPage() {
         >
           <div className="flex items-start justify-between gap-6 mb-8">
             <div>
-              <h2 className="text-3xl font-extrabold text-slate-850 dark:text-white md:text-4xl">FAQ</h2>
-              <p className="max-w-2xl mt-2 text-slate-600 dark:text-slate-400">
-                Quick answers about uploads, privacy, and how NyayaVanni helps you understand legal documents.
-              </p>
+              <h2 className="text-3xl font-extrabold text-slate-850 dark:text-white md:text-4xl">{t('faq.title')}</h2>
+              <p className="max-w-2xl mt-2 text-slate-600 dark:text-slate-400">{t('faq.desc')}</p>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="columns-1 md:columns-2 gap-4 space-y-4">
             {[
-              {
-                q: "What file types are supported?",
-                a: "You can upload PDF, Word Document (.docx), PNG, and JPG files. For best results, use clear scans and readable text."
-              },
-              {
-                q: "Is my document stored permanently?",
-                a: "By default, documents are processed for analysis. If storage is enabled, you may see history features; otherwise files are handled temporarily."
-              },
-              {
-                q: "Can I trust the output as legal advice?",
-                a: "NyayaVanni simplifies and explains. For critical decisions, consult a licensed lawyer."
-              },
-              {
-                q: "What if the upload fails?",
-                a: "Check your internet connection and try a smaller file. If the backend is offline, you’ll see a fallback demo navigation."
-              },
+              { q: t('faq.q1'), a: t('faq.a1') },
+              { q: t('faq.q2'), a: t('faq.a2') },
+              { q: t('faq.q3'), a: t('faq.a3') },
+              { q: t('faq.q4'), a: t('faq.a4') },
             ].map((item, idx) => (
-              <details key={idx}
-                className="p-5 border group rounded-xl cursor-pointer  border-slate-200 dark:border-slate-700/50  bg-white/50 dark:bg-slate-950/40  transition-all duration-300  hover:-translate-y-1 hover:bg-white/80 dark:hover:bg-slate-900/70  hover:border-nyaya-400/50 dark:hover:border-nyaya-500/50  hover:shadow-lg hover:shadow-nyaya-500/10"
+              <div
+                key={idx}
+                className="mb-4 break-inside-avoid p-5 transition-all duration-300 border rounded-xl border-slate-200 dark:border-slate-700/50 bg-white/50 dark:bg-slate-950/40 hover:border-slate-350 dark:hover:border-slate-650"
               >
-                <summary className="flex items-center justify-between gap-4 list-none cursor-pointer">
-                  <span className="font-semibold text-slate-800 dark:text-white">{item.q}</span>
-                  <span className="flex items-center justify-center w-8 h-8 transition border rounded-full shrink-0 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 group-open:bg-slate-200 dark:group-open:bg-white/10">
-                    <span className="transition-transform text-slate-600 dark:text-slate-300 group-open:rotate-45">+</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOpenFaq(openFaq === idx ? null : idx)
+                  }
+                  className="flex items-center justify-between w-full gap-4 text-left cursor-pointer"
+                >
+                  <span className="font-semibold text-slate-800 dark:text-white">
+                    {item.q}
                   </span>
-                </summary>
-                <p className="mt-3 leading-relaxed text-slate-600 dark:text-slate-400">{item.a}</p>
-              </details>
+
+                  <span
+                    className={`flex items-center justify-center w-8 h-8 rounded-full shrink-0 border transition-all duration-300 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 ${
+                      openFaq === idx
+                        ? "rotate-45 bg-slate-200 dark:bg-white/10"
+                        : ""
+                    }`}
+                  >
+                    <span className="text-slate-600 dark:text-slate-300">
+                      +
+                    </span>
+                  </span>
+                </button>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openFaq === idx
+                      ? "max-h-40 opacity-100 mt-3"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <p className="leading-relaxed text-slate-600 dark:text-slate-400">
+                    {item.a}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
+        </div>
 
         {/* Footer */}
-        <footer className="p-8 mt-10 border rounded-4xl border-slate-200 bg-white dark:border-slate-700/50 dark:bg-slate-900/90 backdrop-blur-xl md:p-10 z-20">
+        <footer className="w-full mt-10 border-t border-slate-200 bg-white dark:border-slate-700/50 dark:bg-slate-900/90 backdrop-blur-xl z-20">
+          <div className="mx-auto max-w-7xl px-6 py-8 md:px-10 md:py-10">
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
             {/* Brand */}
             <div className="max-w-md">
@@ -328,19 +380,31 @@ export default function LandingPage() {
                 <span>Nyaya<span className="text-nyaya-400">Vanni</span></span>
               </div>
               <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Understand Indian legal documents in simple language. Upload contracts/notices and get clearer insights fast.
+                Understand Indian legal documents in simple language. Upload contracts or notices and get clearer insights fast.
               </p>
             </div>
 
             {/* Links */}
             <div className="grid w-full grid-cols-2 gap-6 sm:grid-cols-3 md:w-auto">
               <div>
-                <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-white">Product</p>
+                <p className="mb-3 text-sm font-semibold text-slate-800  dark:text-white">Product</p>    
                 <div className="flex flex-col gap-2 text-slate-600 dark:text-slate-400">
-                  <button onClick={() => navigate('/chat')} className="text-left transition hover:text-slate-900 dark:hover:text-white">Chat with AI</button>
-                  <button onClick={() => navigate('/document-generator')} className="text-left transition hover:text-slate-900 dark:hover:text-white">Generate NDA</button>
-                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-left transition hover:text-slate-900 dark:hover:text-white">Upload Document</button>
-                  <button onClick={() => navigate('/lawyers')} className="text-left transition hover:text-slate-900 dark:hover:text-white">Hire a Lawyer</button>
+                  <button onClick={() => navigate('/chat')}  className={`${footerLinkClass} flex items-center gap-1`}
+>Chat with AI<ChevronRight className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
+
+                  <button onClick={() => navigate('/document-generator')}  className={`${footerLinkClass} flex items-center gap-1`}>Generate NDA <ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
+                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}  className={`${footerLinkClass} flex items-center gap-1`}>Upload Document <ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
+                  <button onClick={() => navigate('/lawyers')} className={`${footerLinkClass} flex items-center gap-1`}>Hire a Lawyer<ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
+                  <button onClick={() => navigate('/version-diff')}  className={`${footerLinkClass} flex items-center gap-1`}>Version Diff<ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
                 </div>
               </div>
 
@@ -349,32 +413,56 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-2 text-slate-600 dark:text-slate-400">
                 <button
                   onClick={() => navigate('/faq')}
-                  className="text-left transition hover:text-slate-900 dark:hover:text-white"
+                  className={`${footerLinkClass} flex items-center gap-1`}
                 >
-                  FAQ
+                  FAQ<ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  />
                 </button>
-                  <button onClick={() => navigate('/privacy-policy')} className="text-left transition hover:text-slate-900 dark:hover:text-white">Privacy Policy</button>
-                  <button onClick={() => navigate('/terms')} className="text-left transition hover:text-slate-900 dark:hover:text-white">Terms of Service</button>
+                  <button onClick={() => navigate('/privacy-policy')}className={`${footerLinkClass} flex items-center gap-1`}>Privacy Policy  <ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
+                  <button onClick={() => navigate('/terms')}   className={`${footerLinkClass} flex items-center gap-1`}>Terms of Service  <ChevronRight
+    className="w-3 h-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+  /></button>
                 </div>
               </div>
 
               <div>
                 <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-white">Contact</p>
                 <div className="flex flex-col gap-2 text-slate-600 dark:text-slate-400">
-                  <a href="mailto:support@nyayavanni.com" className="transition hover:text-slate-900 dark:hover:text-white">support@nyayavanni.com</a>
+                  <a href="mailto:support@nyayavanni.com" className="transition-all duration-300 ease-out hover:text-nyaya-400 hover:translate-x-1 hover:[text-shadow:0_0_4px_rgba(45,212,191,0.4)]">support@nyayavanni.com</a>
                   <span className="text-sm text-slate-600 dark:text-slate-500">Mon–Fri, 10AM–6PM</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-start justify-between gap-4 pt-6 mt-8 border-t border-slate-700/50 sm:flex-row sm:items-center">
-            <p className="text-sm text-slate-600 dark:text-slate-500">
+          <div className="flex flex-col items-center sm:items-start justify-between gap-4 pt-6 mt-8 border-t border-slate-700/50 sm:flex-row">
+            <p className="text-sm text-slate-600 dark:text-slate-500 text-center sm:text-left mt-1">
               © {new Date().getFullYear()} NyayaVanni. All rights reserved.
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-500">
+
+            {/* Social Links */}
+            <div className="flex items-center gap-5">
+              <a href="#" className="text-slate-500 hover:text-nyaya-600 dark:hover:text-nyaya-400 transition-all duration-300 hover:-translate-y-1 hover:scale-110" aria-label="Twitter">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-slate-500 hover:text-nyaya-600 dark:hover:text-nyaya-400 transition-all duration-300 hover:-translate-y-1 hover:scale-110" aria-label="GitHub">
+                <Github className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-slate-500 hover:text-nyaya-600 dark:hover:text-nyaya-400 transition-all duration-300 hover:-translate-y-1 hover:scale-110" aria-label="LinkedIn">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-slate-500 hover:text-nyaya-600 dark:hover:text-nyaya-400 transition-all duration-300 hover:-translate-y-1 hover:scale-110" aria-label="Instagram">
+                <Instagram className="w-5 h-5" />
+              </a>
+            </div>
+
+            <p className="text-sm text-slate-600 dark:text-slate-500 text-center sm:text-right mt-1">
               Not legal advice. For professional help, consult a lawyer.
             </p>
+          </div>
           </div>
         </footer>
       </section>

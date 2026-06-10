@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Loader2, Scale, Sparkles } from "lucide-react";
+import ThemeToggle from "../components/ThemeToggle";
 
 const FIELD_CONFIG = [
   {
@@ -102,6 +103,7 @@ export default function DocumentGenerator() {
       const response = await fetch(`${apiUrl}/api/generate-document`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
@@ -129,60 +131,63 @@ export default function DocumentGenerator() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-900 text-slate-100 pb-16">
-      <div className="absolute top-[-8%] left-[-12%] w-[50%] h-[50%] bg-nyaya-500/20 rounded-full blur-[140px] mix-blend-screen pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[52%] h-[52%] bg-blue-600/20 rounded-full blur-[150px] mix-blend-screen pointer-events-none" />
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 pb-16 transition-colors duration-300">
+      <div className="absolute top-[-8%] left-[-12%] w-[50%] h-[50%] bg-nyaya-500/10 dark:bg-nyaya-500/20 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[52%] h-[52%] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[150px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
 
-      <nav className="sticky top-0 z-30 border-b border-white/10 bg-slate-900/60 backdrop-blur-xl">
+      <nav className="sticky top-0 z-30 border-b border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl transition-all duration-300">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition"
+              className="p-2 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition cursor-pointer"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-200" />
+              <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
             </button>
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-xl font-bold tracking-tight text-white"
+              className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-800 dark:text-white cursor-pointer"
             >
               <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-nyaya-500/15 border border-nyaya-500/25">
-                <Scale className="text-nyaya-400 w-5 h-5" />
+                <Scale className="text-nyaya-600 dark:text-nyaya-400 w-5 h-5" />
               </span>
               <span>
-                Nyaya<span className="text-nyaya-400">Vanni</span>
+                Nyaya<span className="text-nyaya-600 dark:text-nyaya-400">Vanni</span>
               </span>
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-200 text-sm">
-            <Sparkles className="w-4 h-4 text-nyaya-300" />
-            NDA Generator
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-sm">
+              <Sparkles className="w-4 h-4 text-nyaya-600 dark:text-nyaya-300" />
+              NDA Generator
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 pt-10">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full bg-nyaya-500/10 border border-nyaya-500/20 text-nyaya-300 font-medium text-sm">
+          <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full bg-nyaya-500/10 border border-nyaya-500/20 text-nyaya-600 dark:text-nyaya-300 font-medium text-sm">
             <FileText className="w-4 h-4" />
             Generate legally structured documents
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">NDA Document Generator</h1>
-          <p className="mt-4 text-base md:text-lg text-slate-300">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-850 dark:text-white">NDA Document Generator</h1>
+          <p className="mt-4 text-base md:text-lg text-slate-600 dark:text-slate-300">
             Fill in the details below to generate a professional NDA PDF instantly.
           </p>
         </div>
 
         <form
           onSubmit={handleGenerate}
-          className="mt-10 rounded-[2rem] border border-white/10 bg-slate-900/60 backdrop-blur-xl p-6 md:p-8 shadow-[0_0_40px_rgba(37,99,235,0.08)]"
+          className="mt-10 rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-6 md:p-8 shadow-md"
         >
           <div className="grid md:grid-cols-2 gap-5">
             {FIELD_CONFIG.map((field) => (
               <div key={field.name} className={field.name === "jurisdiction" ? "md:col-span-2" : ""}>
-                <label htmlFor={field.name} className="block text-sm font-semibold text-slate-200 mb-2">
+                <label htmlFor={field.name} className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
                   {field.label}
                 </label>
                 <input
@@ -191,12 +196,12 @@ export default function DocumentGenerator() {
                   value={formData[field.name]}
                   onChange={(e) => handleChange(field.name, e.target.value)}
                   placeholder={field.placeholder}
-                  className={`w-full px-4 py-3 rounded-xl bg-slate-950/40 border text-white placeholder:text-slate-500
+                  className={`w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border ${errors[field.name] ? 'border-rose-500' : 'border-slate-200 dark:border-white/10'} text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400
                     focus:outline-none focus:ring-2 transition
                     ${
                       errors[field.name]
-                        ? "border-rose-500/60 focus:ring-rose-400/50"
-                        : "border-white/10 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
+                        ? "focus:ring-rose-400/50"
+                        : "focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
                     }`}
                 />
                 {errors[field.name] && <p className="mt-1.5 text-xs text-rose-300">{errors[field.name]}</p>}
@@ -211,7 +216,7 @@ export default function DocumentGenerator() {
           )}
 
           <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Disclaimer: Generated by NyayaVanni for informational purposes only.
             </p>
             <button

@@ -49,15 +49,15 @@ export const LanguageProvider = ({ children }) => {
       "landing.hero.title1": "Understand Indian Legal",
       "landing.hero.title2": "Documents in",
       "landing.hero.title3": "Seconds.",
-      "landing.hero.subtitle": "Upload any notice, contract, or FIR. NyayaVanni decodes complex legal jargon, detects risks, and explains your rights in simple terms.",
+      "landing.hero.subtitle": "Upload any notice, contract, or FIR. NyayaVanni decodes complex legal jargon, identifies risks, and explains your rights in simple terms.",
       "landing.upload.title": "Upload Document",
-      "landing.upload.desc": "Drag and drop your PDF or Image here, or click to browse.",
+      "landing.upload.desc": "Drag and drop your PDF or image here, or click to browse.",
       "landing.upload.btn": "Select File",
       "landing.upload.analyze": "Analyze",
       "landing.upload.analyzing": "Analyzing...",
       "landing.upload.cancel": "Cancel",
       "landing.chat.title": "Chat with AI",
-      "landing.chat.desc": "Ask general legal questions, explore your rights, and get instant answers based on Indian law.",
+      "landing.chat.desc": "Ask general legal questions, explore your rights, and get immediate answers grounded in Indian law.",
       "landing.chat.btn": "Start Chatting",
       "landing.chat.draftNotice": "Draft a Legal Notice",
       "landing.chat.replyNotice": "Draft a Notice Reply",
@@ -75,7 +75,18 @@ export const LanguageProvider = ({ children }) => {
       "lawyers.title": "Find the Right Legal Expert",
       "lawyers.disclaimer": "This is an informational directory. BCI rules prohibit lawyer advertisements.",
       "lawyers.search": "Search by name, location, or specialty...",
-      "lawyers.book": "Request Consultation"
+      "lawyers.book": "Request Consultation",
+      // FAQ translations
+      "faq.title": "FAQ",
+      "faq.desc": "Common questions about NyayaVanni.",
+      "faq.q1": "What file types are supported?",
+      "faq.a1": "You can upload PDF, Word document (.docx), PNG, or JPG files. For best results, use clear scans with readable text.",
+      "faq.q2": "Is my document stored permanently?",
+      "faq.a2": "By default, documents are processed for analysis. If storage is enabled, you may see history features; otherwise, files are handled only temporarily.",
+      "faq.q3": "Can I trust the output as legal advice?",
+      "faq.a3": "NyayaVanni provides simplified explanations and insights. For critical decisions, consult a licensed lawyer.",
+      "faq.q4": "What if the upload fails?",
+      "faq.a4": "Check your internet connection and try uploading a smaller file. If the backend is offline, you’ll be redirected to a fallback demo."
     },
     hi: {
       "nav.hire": "वकील नियुक्त करें",
@@ -111,7 +122,18 @@ export const LanguageProvider = ({ children }) => {
       "lawyers.title": "सही कानूनी विशेषज्ञ खोजें",
       "lawyers.disclaimer": "यह एक सूचनात्मक निर्देशिका है। बीसीआई नियम वकील विज्ञापनों को प्रतिबंधित करते हैं।",
       "lawyers.search": "नाम, स्थान या विशेषज्ञता से खोजें...",
-      "lawyers.book": "परामर्श बुक करें"
+      "lawyers.book": "परामर्श बुक करें",
+      // FAQ translations
+      "faq.title": "प्रश्नोत्तरी (FAQ)",
+      "faq.desc": "NyayaVanni के बारे में सामान्य प्रश्न।",
+      "faq.q1": "कौन से फ़ाइल फ़ॉर्मेट समर्थित हैं?",
+      "faq.a1": "PDF, Word दस्तावेज़ (.docx), PNG, या JPG फ़ाइलें अपलोड की जा सकती हैं। सबसे अच्छे परिणामों के लिए, साफ़ स्कैन का उपयोग करें।",
+      "faq.q2": "क्या NyayaVanni कानूनी सलाह है?",
+      "faq.a2": "डॉक्यूमेंट्स को पहले विश्लेषण के लिए संसाधित किया जाता है। अगर स्टोरेज सक्षम है, तो आपको हिस्ट्री फीचर्स दिख सकते हैं; अन्यथा फ़ाइलें केवल अस्थायी रूप से रखी जाती हैं।",
+      "faq.q3": "यह कैसे काम करता है?",
+      "faq.a3": "NyayaVanni सरल व्याख्या और इनसाइट्स प्रदान करता है। महत्वपूर्ण निर्णयों के लिए, लाइसेंस प्राप्त वकील से परामर्श करें।",
+      "faq.q4": "क्या मेरा डेटा सुरक्षित है?",
+      "faq.a4": "अपना इंटरनेट कनेक्शन जांचें और एक छोटी फ़ाइल अपलोड करने का प्रयास करें। यदि बैकएंड ऑफ़लाइन है, तो आपको एक फॉलबैक डेमो पर रीडायरेक्ट किया जाएगा।"
     }
   };
 

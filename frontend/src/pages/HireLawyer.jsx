@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import LawyerSkeleton from "../components/LawyerSkeleton";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,12 +19,24 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+
 import ThemeToggle from "../components/ThemeToggle";
+import Breadcrumb from "../components/Breadcrumb";
 import Footer from "../components/Footer";
 
 export default function HireLawyer() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +72,7 @@ export default function HireLawyer() {
         specialty: "Real Estate & Property",
         experience: "15 Years",
         location: "New Delhi, Delhi",
-        fee: "₹2,000/Consultation",
+        fee: "â‚¹2,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -69,7 +82,7 @@ export default function HireLawyer() {
         specialty: "Family Law & Divorce",
         experience: "12 Years",
         location: "Mumbai, Maharashtra",
-        fee: "₹2,500/Consultation",
+        fee: "â‚¹2,500/Consultation",
         image:
           "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -79,7 +92,7 @@ export default function HireLawyer() {
         specialty: "Corporate & Business",
         experience: "20 Years",
         location: "Bengaluru, Karnataka",
-        fee: "₹5,000/Consultation",
+        fee: "â‚¹5,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -89,7 +102,7 @@ export default function HireLawyer() {
         specialty: "Criminal Defense",
         experience: "8 Years",
         location: "Pune, Maharashtra",
-        fee: "₹1,500/Consultation",
+        fee: "â‚¹1,500/Consultation",
         image:
           "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -99,7 +112,7 @@ export default function HireLawyer() {
         specialty: "Civil Litigation",
         experience: "18 Years",
         location: "Chennai, Tamil Nadu",
-        fee: "₹3,000/Consultation",
+        fee: "â‚¹3,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -109,7 +122,7 @@ export default function HireLawyer() {
         specialty: "Intellectual Property",
         experience: "10 Years",
         location: "Hyderabad, Telangana",
-        fee: "₹4,000/Consultation",
+        fee: "â‚¹4,000/Consultation",
         image:
           "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256",
       },
@@ -222,7 +235,7 @@ export default function HireLawyer() {
   };
 
   return (
-    <div className="relative min-h-screen pb-16 overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
       {/* Background gradients (match LandingPage) */}
       <div className="absolute top-[-10%] left-[-10%] w-[55%] h-[55%] bg-nyaya-500/10 dark:bg-nyaya-500/25 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
       <div className="absolute bottom-[-12%] right-[-12%] w-[60%] h-[60%] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[160px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" />
@@ -256,6 +269,9 @@ export default function HireLawyer() {
             </div>
             <ThemeToggle />
           </div>
+        </div>
+        <div className="px-6 py-2 mx-auto max-w-7xl border-t border-slate-100 dark:border-white/5">
+          <Breadcrumb />
         </div>
       </nav>
 
@@ -354,7 +370,7 @@ export default function HireLawyer() {
                   placeholder={t("lawyers.search")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
+                  className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
                 />
               </div>
 
@@ -377,7 +393,7 @@ export default function HireLawyer() {
                 </select>
 
                 <div className="absolute inset-y-0 flex items-center pointer-events-none right-4 text-slate-400 dark:text-slate-500">
-                  ▾
+                  â–¾
                 </div>
               </div>
             </div>
@@ -412,7 +428,13 @@ export default function HireLawyer() {
         </div>
 
         {/* Grid */}
-        {filteredLawyers.length === 0 ? (
+       {loading ? (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <LawyerSkeleton key={index} />
+    ))}
+  </div>
+) : filteredLawyers.length === 0 ? (
           <div className="p-10 text-center border rounded-4xl border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-md">
             <Briefcase className="w-12 h-12 mx-auto mb-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-xl font-bold text-slate-850 dark:text-white">No lawyers found</h3>
@@ -491,7 +513,7 @@ export default function HireLawyer() {
         )}
       </main>
 
-      <section className="z-10 w-full px-6 pb-16 mx-auto max-w-7xl">
+      <section className="z-10 w-full">
         <Footer />
       </section>
 
@@ -503,15 +525,15 @@ export default function HireLawyer() {
             className="absolute inset-0 transition-opacity duration-300 bg-slate-950/60 backdrop-blur-sm"
           />
 
-          <div className="relative w-full max-w-xl bg-white/95 border border-white/20 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden transition-all transform scale-100 flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+          <div className="relative w-full max-w-xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden transition-all transform scale-100 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-white/10 shrink-0">
               <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-10 h-10 text-blue-600 rounded-full bg-blue-50 shrink-0">
+                <span className="flex items-center justify-center w-10 h-10 text-blue-600 dark:text-blue-400 rounded-full bg-blue-50 dark:bg-blue-500/10 shrink-0">
                   <Scale className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Consultation Scheduler</h3>
-                  <p className="text-xs font-semibold text-slate-500">NyayaVanni Instant Match</p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">Consultation Scheduler</h3>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">NyayaVanni Instant Match</p>
                 </div>
               </div>
 
@@ -526,22 +548,22 @@ export default function HireLawyer() {
             <div className="flex-1 p-6 overflow-y-auto">
               {!bookingComplete ? (
                 <form onSubmit={handleConfirmBooking} className="space-y-6">
-                  <div className="flex items-center gap-4 p-4 border bg-slate-50 border-slate-100 rounded-2xl">
+                  <div className="flex items-center gap-4 p-4 border bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 rounded-2xl">
                     <img
                       src={selectedLawyer.image}
                       alt={selectedLawyer.name}
                       className="object-cover w-12 h-12 border rounded-full"
                     />
                     <div>
-                      <h4 className="font-bold text-slate-800">{selectedLawyer.name}</h4>
+                      <h4 className="font-bold text-slate-800 dark:text-white">{selectedLawyer.name}</h4>
                       <p className="text-xs font-semibold text-blue-600">{selectedLawyer.specialty}</p>
-                      <p className="text-xs font-semibold text-slate-500 mt-0.5">{selectedLawyer.fee}</p>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{selectedLawyer.fee}</p>
                     </div>
                   </div>
 
                   {/* Date selector */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
                       Select Date Slot
                     </label>
                     <div className="flex gap-2.5 overflow-x-auto pb-2">
@@ -554,8 +576,8 @@ export default function HireLawyer() {
                             onClick={() => setSelectedDate(d.fullDate)}
                             className={`flex flex-col items-center justify-center p-3 rounded-xl border shrink-0 w-16 transition-all ${
                               isSelected
-                                ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10"
-                                : "bg-white border-slate-200 hover:border-slate-300 text-slate-600"
+                                ? "bg-slate-900 dark:bg-blue-600 border-slate-900 dark:border-blue-600 text-white shadow-md shadow-slate-900/10"
+                                : "bg-white dark:bg-slate-950/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-blue-500/40 text-slate-600 dark:text-slate-300"
                             }`}
                           >
                             <span className="text-[10px] uppercase font-bold tracking-wider">{d.dayName}</span>
@@ -569,7 +591,7 @@ export default function HireLawyer() {
 
                   {/* Time */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
                       Select Available Time
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -582,8 +604,8 @@ export default function HireLawyer() {
                             onClick={() => setSelectedTime(time)}
                             className={`py-2.5 rounded-xl border text-center text-xs font-bold transition-all ${
                               isSelected
-                                ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10"
-                                : "bg-white border-slate-200 hover:border-slate-300 text-slate-600"
+                                ? "bg-slate-900 dark:bg-blue-600 border-slate-900 dark:border-blue-600 text-white shadow-md shadow-slate-900/10"
+                                : "bg-white dark:bg-slate-950/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-blue-500/40 text-slate-600 dark:text-slate-300"
                             }`}
                           >
                             {time}
@@ -595,14 +617,16 @@ export default function HireLawyer() {
 
                   {/* Attach context */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
                       Legal Context
                     </label>
                     <div
                       onClick={() => setAttachDocument(!attachDocument)}
                       className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                        attachDocument ? "bg-blue-50/50 border-blue-200 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"
-                      }`}
+                        attachDocument
+                          ? "bg-blue-50/50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 shadow-sm"
+                          : "bg-white dark:bg-slate-950/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-blue-500/30"
+                        }`}
                     >
                       <div
                         className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
@@ -614,9 +638,9 @@ export default function HireLawyer() {
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5">
                           <FileText className={`w-4 h-4 ${attachDocument ? "text-blue-600" : "text-slate-400"}`} />
-                          <h5 className="text-xs font-bold text-slate-800">Attach Document Analysis</h5>
+                          <h5 className="text-xs font-bold text-slate-800 dark:text-white">Attach Document Analysis</h5>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-semibold mt-1">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
                           Share your active analyzed legal document automatically with {selectedLawyer.name} for instant briefing.
                         </p>
                       </div>
@@ -625,7 +649,7 @@ export default function HireLawyer() {
 
                   {/* Case summary */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                    <label className="block text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
                       Case Summary or Questions
                     </label>
                     <textarea
@@ -633,13 +657,13 @@ export default function HireLawyer() {
                       value={caseDescription}
                       onChange={(e) => setCaseDescription(e.target.value)}
                       rows={3}
-                      className="w-full p-3 text-xs font-medium border bg-slate-50 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full p-3 text-xs font-medium border bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-900"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                    className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-nyaya-500 to-blue-600 hover:from-nyaya-400 hover:to-blue-500 transition-all duration-300 shadow-lg hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
                   >
                     Confirm Consultation Booking
                   </button>
@@ -753,3 +777,5 @@ export default function HireLawyer() {
     </div>
   );
 }
+
+
