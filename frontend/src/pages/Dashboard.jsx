@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import {
-  Scale, AlertTriangle, ArrowLeft, Calendar, FileText,
-  Bot, Send, User, Users, AlertCircle, Briefcase, Search, Copy
-} from 'lucide-react';
 import DashboardSkeleton from "../components/DashboardSkeleton";
 import ReactFlow, {
   MiniMap,
@@ -11,14 +7,13 @@ import ReactFlow, {
   Background
 } from 'reactflow'; 
 import 'reactflow/dist/style.css';
-import { Scale, AlertTriangle, ArrowLeft, Calendar, FileText, Bot, Send, User, Users, AlertCircle, Briefcase, Search } from 'lucide-react';
+import { Scale, AlertTriangle, ArrowLeft, Calendar, FileText, Bot, Send, User, Users, AlertCircle, Briefcase, Search, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ensureSessionId } from '../utils/session';
 import ThemeToggle from '../components/ThemeToggle';
 import Breadcrumb from '../components/Breadcrumb';
 import { useDocumentHistory } from '../hooks/useDocumentHistory';
-import { DOCUMENT_TYPES, PLACEHOLDERS, TITLES, HEADERS } from '../constants';
 
 const LOADING_CONTAINER = `min-h-screen bg-slate-50 dark:bg-slate-950 
   flex flex-col items-center justify-center transition-colors duration-300`;
@@ -158,9 +153,7 @@ const ASSISTANT_AVATAR = `w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800
 const USER_BUBBLE = `p-4 rounded-2xl max-w-[80%] text-sm whitespace-pre-wrap 
   bg-nyaya-900 text-white rounded-tr-sm shadow-md border border-nyaya-850`;
 
-const ASSISTANT_BUBBLE = `p-4 rounded-2xl max-w-[80%] text-sm whitespace-pre-wrap 
-  bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 
-  rounded-tl-sm text-slate-750 dark:text-slate-200 shadow-sm`;
+const ASSISTANT_BUBBLE = "group relative p-3 rounded-2xl max-w-[85%] text-sm bg-white dark:bg-slate-950 rounded-tl-sm text-slate-750 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm";
 
 const PROSE = `prose prose-sm max-w-none prose-li:my-0.5 prose-ul:my-1 
   prose-p:my-1 text-slate-700 dark:text-slate-200 
@@ -272,8 +265,8 @@ const [selectedType, _setSelectedType] = useState('all');
         
         saveToHistory({
           documentId,
-          fileName: file?.name || DOCUMENT_TYPES.UNKNOWN,
-          fileType: file?.type?.includes('pdf') ? DOCUMENT_TYPES.PDF : file?.type?.includes('image') ? DOCUMENT_TYPES.IMAGE : DOCUMENT_TYPES.DOCUMENT,
+          fileName: file?.name || 'Unknown Document',
+          fileType: file?.type?.includes('pdf') ? 'PDF' : file?.type?.includes('image') ? 'Image' : 'Document',
           riskLevel: data.analysis?.risk_level || data.classification?.risk_level || 'unknown',
           analyzedAt: new Date().toISOString(),
         });
@@ -314,7 +307,7 @@ const [selectedType, _setSelectedType] = useState('all');
       const sessionId = await ensureSessionId(apiUrl);
       const response = await fetch(`${apiUrl}/api/chat/${documentId}`, {
         method: 'POST',
-        headers: { ...HEADERS.CONTENT_TYPE_JSON, 'X-Session-Id': sessionId },
+        headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
         credentials: 'include',
         body: JSON.stringify({
           user_message: userMsg.message,
@@ -511,13 +504,13 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
             file?.type?.includes('pdf') ? (
             <iframe
             src={previewUrl}
-            title={TITLES.DOCUMENT_PREVIEW}
+            title="Document Preview"
             className="w-full h-full"
             />
           ) : (
             <img
           src={previewUrl}
-          alt={DOCUMENT_TYPES.UNKNOWN}
+          alt="Uploaded Document"
           className="w-full h-full object-contain bg-white"
           />
       )
@@ -816,27 +809,6 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
         {knowledgeGraph && (
           <div className={KG_SECTION}>
             
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/20">
-              {chatHistory.map((msg, idx) => (
-                <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex items-center justify-center shrink-0 w-8 h-8 rounded-full border ${msg.role === 'user' ? 'bg-nyaya-500 text-white dark:border-nyaya-600' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 dark:border-slate-700'}`}>
-                    {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-                  </div>
-                  <div className={`relative group p-4 rounded-2xl max-w-[80%] text-sm whitespace-pre-wrap shadow-sm border ${msg.role === 'user' ? 'bg-nyaya-900 text-white rounded-tr-sm border-nyaya-850' : 'bg-white dark:bg-slate-950 rounded-tl-sm text-slate-750 dark:text-slate-200 border-slate-200 dark:border-slate-800'}`}>
-                    {msg.role === 'assistant' ? (
-                      <>
-                        <div className="prose prose-sm max-w-none prose-li:my-0.5 prose-ul:my-1 prose-p:my-1 text-slate-700 dark:text-slate-200 prose-headings:text-slate-800 dark:prose-headings:text-white prose-strong:text-slate-900 dark:prose-strong:text-white prose-code:text-amber-600 dark:prose-code:text-amber-250">
-                          <ReactMarkdown>{msg.message}</ReactMarkdown>
-                        </div>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(msg.message)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300"
-                          title="Copy to clipboard"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    ) : msg.message}
             <div className="mb-6">
   <h2 className={KG_TITLE}>
     Legal Knowledge Graph
@@ -849,7 +821,7 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
   <div className="mt-4">
     <input
       type="text"
-      placeholder={PLACEHOLDERS.SEARCH_NODES}
+      placeholder="Search nodes..."
       className={SEARCH_INPUT}
     />
   </div>
@@ -956,9 +928,18 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
                 </div>
                 <div className={`${msg.role === 'user' ? USER_BUBBLE : ASSISTANT_BUBBLE}`}>
                   {msg.role === 'assistant' ? (
-                    <div className={PROSE}>
-                      <ReactMarkdown>{msg.message}</ReactMarkdown>
-                    </div>
+                    <>
+                      <div className={PROSE}>
+                        <ReactMarkdown>{msg.message}</ReactMarkdown>
+                      </div>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(msg.message)}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300"
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </>
                   ) : msg.message}
                 </div>
               </div>
