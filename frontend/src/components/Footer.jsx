@@ -18,6 +18,10 @@ export default function Footer() {
 
   const L = language === 'en' ? EN : HI;
 
+  const apiDocsUrl = import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/docs`
+    : '/docs';
+
   return (
     <footer className="w-full mt-16 border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-6 py-8 md:px-10 md:py-10">
@@ -36,7 +40,7 @@ export default function Footer() {
         </div>
 
         {/* Links Grid */}
-        <div className="grid w-full grid-cols-2 gap-6 sm:grid-cols-3 md:w-auto">
+        <div className="grid w-full grid-cols-2 gap-6 sm:grid-cols-4 md:w-auto">
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-white uppercase tracking-wider">
               {L.PRODUCT}
@@ -77,6 +81,22 @@ export default function Footer() {
               <span className="text-xs text-slate-600 dark:text-slate-500">
                 {L.FOOTER_HOURS}
               </span>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-white uppercase tracking-wider">
+              {language === 'en' ? 'Developers' : 'डेवलपर्स'}
+            </p>
+            <div className="flex flex-col gap-2 text-slate-700 dark:text-slate-400 text-sm">
+              <a 
+                href={apiDocsUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-nyaya-600 dark:hover:text-white transition duration-250 flex items-center gap-1.5 cursor-pointer"
+              >
+                {language === 'en' ? 'API Documentation' : 'एपीआई दस्तावेज़'}
+              </a>
             </div>
           </div>
         </div>
