@@ -510,7 +510,7 @@ export default function HireLawyer() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-lg font-bold text-slate-850 dark:text-white truncate transition-colors group-hover:text-nyaya-600 dark:group-hover:text-nyaya-300">
+                    <h3 className="text-lg font-bold text-slate-850 dark:text-white break-words transition-colors group-hover:text-nyaya-600 dark:group-hover:text-nyaya-300">
                       {lawyer.name}
                     </h3>
                     <p className="text-sm font-semibold text-nyaya-600 dark:text-nyaya-300/90">{lawyer.specialty}</p>
