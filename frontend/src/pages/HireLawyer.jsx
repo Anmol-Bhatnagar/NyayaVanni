@@ -182,12 +182,14 @@ export default function HireLawyer() {
     });
   }, [mockLawyers, searchTerm, filterType]);
 
-  // Autocomplete suggestions based on matching name
+  // Autocomplete suggestions based on matching name, specialty (category), or location
   const suggestions = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
     return mockLawyers.filter((lawyer) =>
-      lawyer.name.toLowerCase().includes(term)
+      lawyer.name.toLowerCase().includes(term) ||
+      lawyer.specialty.toLowerCase().includes(term) ||
+      lawyer.location.toLowerCase().includes(term)
     );
   }, [mockLawyers, searchTerm]);
 
