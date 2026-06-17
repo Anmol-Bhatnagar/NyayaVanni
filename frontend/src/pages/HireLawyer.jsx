@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import LawyerSkeleton from "../components/LawyerSkeleton";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,6 +19,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { ARIA_LABELS, PLACEHOLDERS } from "../constants";
 
 import ThemeToggle from "../components/ThemeToggle";
 import Breadcrumb from "../components/Breadcrumb";
@@ -41,6 +42,9 @@ export default function HireLawyer() {
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(-1);
+  const searchContainerRef = useRef(null);
 
   // Modal / Booking State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -177,6 +181,55 @@ export default function HireLawyer() {
       return matchesSearch && matchesFilter;
     });
   }, [mockLawyers, searchTerm, filterType]);
+
+  // Autocomplete suggestions based on matching name
+  const suggestions = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return [];
+    return mockLawyers.filter((lawyer) =>
+      lawyer.name.toLowerCase().includes(term)
+    );
+  }, [mockLawyers, searchTerm]);
+
+  // Click outside to dismiss the suggestions menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectSuggestion = (lawyer) => {
+    setSearchTerm(lawyer.name);
+    setShowSuggestions(false);
+    setFocusedSuggestionIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedSuggestionIndex((prev) => (prev + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedSuggestionIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter") {
+      if (focusedSuggestionIndex >= 0 && focusedSuggestionIndex < suggestions.length) {
+        e.preventDefault();
+        handleSelectSuggestion(suggestions[focusedSuggestionIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setFocusedSuggestionIndex(-1);
+    }
+  };
 
   const handleOpenBooking = (lawyer) => {
     setSelectedLawyer(lawyer);
@@ -392,14 +445,18 @@ export default function HireLawyer() {
           <div className="rounded-4xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-5 md:p-6 shadow-md">
             <div className="flex flex-col gap-4 md:flex-row">
               {/* Search */}
-              <div className="relative flex-1">
+              <div ref={searchContainerRef} className="relative flex-1">
                 <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
                   <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 </div>
 
                 {searchTerm.length > 0 && (
                   <button
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => {
+                      setSearchTerm("");
+                      setShowSuggestions(false);
+                      setFocusedSuggestionIndex(-1);
+                    }}
                     className="absolute inset-y-0 px-3 my-auto text-sm transition border rounded-full right-3 h-9 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 cursor-pointer"
                   >
                     Clear
@@ -410,9 +467,50 @@ export default function HireLawyer() {
                   type="text"
                   placeholder={t("lawyers.search")}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowSuggestions(true);
+                    setFocusedSuggestionIndex(-1);
+                  }}
                   className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
                 />
+
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl max-h-60 overflow-y-auto backdrop-blur-xl">
+                    {suggestions.map((lawyer, index) => {
+                      const isFocused = index === focusedSuggestionIndex;
+                      return (
+                        <div
+                          key={lawyer.id}
+                          onClick={() => handleSelectSuggestion(lawyer)}
+                          onMouseEnter={() => setFocusedSuggestionIndex(index)}
+                          className={`px-4 py-3 cursor-pointer transition-colors flex items-center justify-between border-b last:border-b-0 border-slate-100 dark:border-white/5 ${
+                            isFocused
+                              ? "bg-slate-100 dark:bg-white/10 text-nyaya-600 dark:text-nyaya-300"
+                              : "text-slate-850 dark:text-slate-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={lawyer.image}
+                              alt={lawyer.name}
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-white/10"
+                            />
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm truncate">{lawyer.name}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{lawyer.specialty}</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 shrink-0">
+                            {lawyer.location}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Filter */}
