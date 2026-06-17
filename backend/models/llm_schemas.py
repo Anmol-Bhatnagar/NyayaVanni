@@ -44,3 +44,56 @@ class DocumentAnalysis(BaseModel):
         description="e.g., Respond within X days"
     )
     actions: List[ActionItem]
+
+
+class DiffStats(BaseModel):
+    lines_added: int
+    lines_removed: int
+
+
+class AddedObligation(BaseModel):
+    clause: str
+    severity: Literal["low", "medium", "high", "critical"]
+    detail: str
+
+
+class IncreasedPenalty(BaseModel):
+    clause: str
+    old_value: str
+    new_value: str
+    detail: str
+
+
+class ReducedEmployeeRight(BaseModel):
+    clause: str
+    severity: Literal["low", "medium", "high", "critical"]
+    detail: str
+
+
+class HiddenModification(BaseModel):
+    clause: str
+    risk: Literal["low", "medium", "high", "critical"]
+    detail: str
+
+
+class NewLegalExposure(BaseModel):
+    clause: str
+    severity: Literal["low", "medium", "high", "critical"]
+    detail: str
+
+
+class DiffAnalysisResult(BaseModel):
+    overall_risk_level: Literal["low", "medium", "high", "critical"]
+    summary: str
+    added_obligations: List[AddedObligation]
+    increased_penalties: List[IncreasedPenalty]
+    reduced_employee_rights: List[ReducedEmployeeRight]
+    hidden_modifications: List[HiddenModification]
+    new_legal_exposure: List[NewLegalExposure]
+    recommended_actions: List[str]
+
+
+class DiffAnalysisResponse(BaseModel):
+    diff_stats: DiffStats
+    analysis: DiffAnalysisResult
+

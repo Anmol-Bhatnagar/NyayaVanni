@@ -51,3 +51,48 @@ def test_parse_from_embedded_text():
     resp = MockRespText(txt)
     parsed = _parse(resp)
     assert parsed == data
+
+
+def sample_diff_payload():
+    return {
+        "diff_stats": {
+            "lines_added": 12,
+            "lines_removed": 4
+        },
+        "analysis": {
+            "overall_risk_level": "medium",
+            "summary": "This is a summary of the differences.",
+            "added_obligations": [
+                {"clause": "Clause 1", "severity": "medium", "detail": "Details of the obligation"}
+            ],
+            "increased_penalties": [
+                {"clause": "Clause 2", "old_value": "$100", "new_value": "$500", "detail": "Details of penalty"}
+            ],
+            "reduced_employee_rights": [
+                {"clause": "Clause 3", "severity": "low", "detail": "Details of right"}
+            ],
+            "hidden_modifications": [
+                {"clause": "Clause 4", "risk": "medium", "detail": "Details of modification"}
+            ],
+            "new_legal_exposure": [
+                {"clause": "Clause 5", "severity": "medium", "detail": "Details of exposure"}
+            ],
+            "recommended_actions": ["Review carefully", "Verify limits"]
+        }
+    }
+
+
+def test_parse_diff_from_json_method():
+    data = sample_diff_payload()
+    resp = MockRespJSON(data)
+    parsed = _parse(resp)
+    assert parsed == data
+
+
+def test_parse_diff_from_fenced_text():
+    data = sample_diff_payload()
+    txt = "Here is the diff analysis:\n```json\n" + json.dumps(data) + "\n```"
+    resp = MockRespText(txt)
+    parsed = _parse(resp)
+    assert parsed == data
+

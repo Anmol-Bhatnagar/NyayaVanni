@@ -15,9 +15,9 @@ if BACKEND_PATH not in sys.path:
 
 # Provide a lightweight stub for google.genai to avoid import/runtime errors
 import types
-if 'google.genai' not in sys.modules:
+if 'google.generativeai' not in sys.modules:
     google_mod = types.ModuleType('google')
-    genai_mod = types.ModuleType('google.genai')
+    generativeai_mod = types.ModuleType('google.generativeai')
     def _configure(*args, **kwargs):
         return None
     class _GenerativeModel:
@@ -25,16 +25,11 @@ if 'google.genai' not in sys.modules:
             pass
         def generate_content(self, *args, **kwargs):
             return ''
-    genai_mod.configure = _configure
-    genai_mod.GenerativeModel = _GenerativeModel
+    generativeai_mod.configure = _configure
+    generativeai_mod.GenerativeModel = _GenerativeModel
     sys.modules['google'] = google_mod
-    sys.modules['google.genai'] = genai_mod
-    # Ensure `from google import genai` works by setting attribute on the google module
-    setattr(sys.modules['google'], 'genai', sys.modules['google.genai'])
-    # Also provide `google.generative` package with `genai` attribute used in code
-    generative_mod = types.ModuleType('google.generative')
-    setattr(generative_mod, 'genai', sys.modules['google.genai'])
-    sys.modules['google.generative'] = generative_mod
+    sys.modules['google.generativeai'] = generativeai_mod
+    setattr(google_mod, 'generativeai', generativeai_mod)
 
 mod = import_module('backend.services.gemini_service')
 _parse = getattr(mod, '_parse_structured_response')
@@ -66,6 +61,35 @@ def sample_payload():
     }
 
 
+def sample_diff_payload():
+    return {
+        "diff_stats": {
+            "lines_added": 12,
+            "lines_removed": 4
+        },
+        "analysis": {
+            "overall_risk_level": "medium",
+            "summary": "This is a summary of the differences.",
+            "added_obligations": [
+                {"clause": "Clause 1", "severity": "medium", "detail": "Details of the obligation"}
+            ],
+            "increased_penalties": [
+                {"clause": "Clause 2", "old_value": "$100", "new_value": "$500", "detail": "Details of penalty"}
+            ],
+            "reduced_employee_rights": [
+                {"clause": "Clause 3", "severity": "low", "detail": "Details of right"}
+            ],
+            "hidden_modifications": [
+                {"clause": "Clause 4", "risk": "medium", "detail": "Details of modification"}
+            ],
+            "new_legal_exposure": [
+                {"clause": "Clause 5", "severity": "medium", "detail": "Details of exposure"}
+            ],
+            "recommended_actions": ["Review carefully", "Verify limits"]
+        }
+    }
+
+
 def run_all():
     data = sample_payload()
     # Test json method
@@ -87,6 +111,20 @@ def run_all():
     parsed3 = _parse(resp3)
     assert parsed3 == data, f"embedded text test failed: {parsed3}"
     print('test_parse_from_embedded_text: OK')
+
+    # Diff analysis tests
+    diff_data = sample_diff_payload()
+    resp_diff1 = MockRespJSON(diff_data)
+    parsed_diff1 = _parse(resp_diff1)
+    assert parsed_diff1 == diff_data, f"diff json method test failed: {parsed_diff1}"
+    print('test_parse_diff_from_json_method: OK')
+
+    txt_diff = "Here is the diff analysis:\n```json\n" + json.dumps(diff_data) + "\n```"
+    resp_diff2 = MockRespText(txt_diff)
+    parsed_diff2 = _parse(resp_diff2)
+    assert parsed_diff2 == diff_data, f"diff fenced text test failed: {parsed_diff2}"
+    print('test_parse_diff_from_fenced_text: OK')
+
 
 if __name__ == '__main__':
     try:
