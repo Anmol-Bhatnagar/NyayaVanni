@@ -182,16 +182,19 @@ export default function HireLawyer() {
     });
   }, [mockLawyers, searchTerm, filterType]);
 
-  // Autocomplete suggestions based on matching name, specialty (category), or location
+  // Autocomplete suggestions based on matching name, specialty (category), or location, respecting active category filter
   const suggestions = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
-    return mockLawyers.filter((lawyer) =>
-      lawyer.name.toLowerCase().includes(term) ||
-      lawyer.specialty.toLowerCase().includes(term) ||
-      lawyer.location.toLowerCase().includes(term)
-    );
-  }, [mockLawyers, searchTerm]);
+    return mockLawyers.filter((lawyer) => {
+      const matchesSearch =
+        lawyer.name.toLowerCase().includes(term) ||
+        lawyer.specialty.toLowerCase().includes(term) ||
+        lawyer.location.toLowerCase().includes(term);
+      const matchesFilter = filterType === "All" || lawyer.specialty === filterType;
+      return matchesSearch && matchesFilter;
+    });
+  }, [mockLawyers, searchTerm, filterType]);
 
   // Click outside to dismiss the suggestions menu
   useEffect(() => {
