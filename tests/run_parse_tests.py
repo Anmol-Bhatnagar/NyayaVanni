@@ -13,11 +13,13 @@ BACKEND_PATH = os.path.join(ROOT, 'backend')
 if BACKEND_PATH not in sys.path:
     sys.path.insert(0, BACKEND_PATH)
 
-# Provide a lightweight stub for google.genai to avoid import/runtime errors
+# Provide a lightweight stub for google.genai and google.generativeai to avoid import/runtime errors
 import types
 if 'google.generativeai' not in sys.modules:
-    google_mod = types.ModuleType('google')
-    generativeai_mod = types.ModuleType('google.generativeai')
+    google_mod = sys.modules.get('google') or types.ModuleType('google')
+    sys.modules['google'] = google_mod
+    
+    genai_mod = types.ModuleType('google.generativeai')
     def _configure(*args, **kwargs):
         return None
     class _GenerativeModel:
@@ -25,11 +27,17 @@ if 'google.generativeai' not in sys.modules:
             pass
         def generate_content(self, *args, **kwargs):
             return ''
-    generativeai_mod.configure = _configure
-    generativeai_mod.GenerativeModel = _GenerativeModel
-    sys.modules['google'] = google_mod
-    sys.modules['google.generativeai'] = generativeai_mod
-    setattr(google_mod, 'generativeai', generativeai_mod)
+    genai_mod.configure = _configure
+    genai_mod.GenerativeModel = _GenerativeModel
+    sys.modules['google.generativeai'] = genai_mod
+    setattr(google_mod, 'generativeai', genai_mod)
+    
+    # Also keep genai stubs for future-proofing
+    genai_stub = types.ModuleType('google.genai')
+    genai_stub.configure = _configure
+    genai_stub.GenerativeModel = _GenerativeModel
+    sys.modules['google.genai'] = genai_stub
+    setattr(google_mod, 'genai', genai_stub)
 
 mod = import_module('backend.services.gemini_service')
 _parse = getattr(mod, '_parse_structured_response')
