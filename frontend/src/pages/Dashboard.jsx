@@ -19,6 +19,8 @@ import {
   Copy,
   Printer,
   Share2,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -230,6 +232,7 @@ export default function Dashboard() {
   const { saveToHistory } = useDocumentHistory();
 
   const [analysis, setAnalysis] = useState(null);
+  const [activeForensicTab, setActiveForensicTab] = useState('clauses');
   const [extractedText, setExtractedText] = useState('');
   const [knowledgeGraph, setKnowledgeGraph] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -919,7 +922,163 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            {knowledgeGraph && (
+          )}
+        </div>
+
+        {analysis?.forensic_audit && (
+          <div className={`${CARD_BASE} p-6 border-nyaya-500/25 dark:border-nyaya-800/40 shadow-md`}>
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldAlert className="w-6 h-6 text-nyaya-600 dark:text-nyaya-400 animate-pulse" />
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">AI Forensic Audit Report ⚖️</h2>
+            </div>
+            
+            {analysis.forensic_audit.executive_summary && (
+              <div className="p-4 mb-6 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <h4 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Executive Summary</h4>
+                <p className="text-sm text-slate-755 dark:text-slate-300 leading-relaxed">
+                  {analysis.forensic_audit.executive_summary}
+                </p>
+              </div>
+            )}
+            
+            {/* Forensic Audit Tab Headers */}
+            <div className="flex border-b border-slate-200 dark:border-slate-800 mb-4 overflow-x-auto">
+              <button
+                onClick={() => setActiveForensicTab('clauses')}
+                className={`pb-2.5 px-4 font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                  activeForensicTab === 'clauses'
+                    ? 'border-nyaya-500 text-nyaya-600 dark:text-nyaya-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+              >
+                Asymmetric Clauses ({analysis.forensic_audit.asymmetric_clauses?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveForensicTab('compliance')}
+                className={`pb-2.5 px-4 font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                  activeForensicTab === 'compliance'
+                    ? 'border-nyaya-500 text-nyaya-600 dark:text-nyaya-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+              >
+                Indian Law Compliance ({analysis.forensic_audit.compliance_breaches?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveForensicTab('loopholes')}
+                className={`pb-2.5 px-4 font-semibold text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                  activeForensicTab === 'loopholes'
+                    ? 'border-nyaya-500 text-nyaya-600 dark:text-nyaya-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+              >
+                Adversarial Loopholes ({analysis.forensic_audit.loopholes?.length || 0})
+              </button>
+            </div>
+            
+            {/* Tab content: Clauses */}
+            {activeForensicTab === 'clauses' && (
+              <div className="space-y-4">
+                {(!analysis.forensic_audit.asymmetric_clauses || analysis.forensic_audit.asymmetric_clauses.length === 0) ? (
+                  <p className="text-sm text-slate-500 text-center py-6">No asymmetric clauses identified.</p>
+                ) : (
+                  analysis.forensic_audit.asymmetric_clauses.map((clause, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:scale-[1.01] transition-transform">
+                      <div className="flex justify-between items-start gap-3 mb-2.5">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-base">{clause.clause_name}</h4>
+                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                          clause.severity === 'critical' || clause.severity === 'high'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                            : 'bg-yellow-100 text-yellow-755 dark:bg-yellow-950/30 dark:text-yellow-400'
+                        }`}>
+                          {clause.severity}
+                        </span>
+                      </div>
+                      <div className="mb-3 p-3 text-xs italic font-mono bg-slate-50 dark:bg-slate-950 rounded border border-slate-150 dark:border-slate-850 text-slate-700 dark:text-slate-355 whitespace-pre-wrap">
+                        "{clause.quoted_text}"
+                      </div>
+                      <div className="text-sm text-slate-650 dark:text-slate-300">
+                        <span className="font-semibold text-slate-800 dark:text-white">Analysis:</span> {clause.analysis}
+                      </div>
+                      <div className="mt-2.5 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-450">
+                        <span className="font-semibold">Favors:</span>
+                        <span className={`px-1.5 py-0.5 rounded ${
+                          clause.bias_direction === 'mutual_unfavorable'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-455'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                        }`}>
+                          {clause.bias_direction.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+            
+            {/* Tab content: Compliance */}
+            {activeForensicTab === 'compliance' && (
+              <div className="space-y-4">
+                {(!analysis.forensic_audit.compliance_breaches || analysis.forensic_audit.compliance_breaches.length === 0) ? (
+                  <p className="text-sm text-slate-500 text-center py-6">No compliance breaches identified under Indian Law.</p>
+                ) : (
+                  analysis.forensic_audit.compliance_breaches.map((breach, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                      <div className="flex justify-between items-start gap-3 mb-2.5">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-base">{breach.clause_affected}</h4>
+                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                          breach.is_voidable 
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-355'
+                        }`}>
+                          {breach.is_voidable ? 'Legally Voidable' : 'Regulatory Concern'}
+                        </span>
+                      </div>
+                      <div className="mb-2 text-sm text-nyaya-600 dark:text-nyaya-400 font-semibold flex items-center gap-1">
+                        <Scale className="w-4 h-4" /> Citation: {breach.indian_law_citation}
+                      </div>
+                      <div className="text-sm text-slate-650 dark:text-slate-300">
+                        <span className="font-semibold text-slate-800 dark:text-white">Reasoning:</span> {breach.reasoning}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+            
+            {/* Tab content: Loopholes */}
+            {activeForensicTab === 'loopholes' && (
+              <div className="space-y-4">
+                {(!analysis.forensic_audit.loopholes || analysis.forensic_audit.loopholes.length === 0) ? (
+                  <p className="text-sm text-slate-500 text-center py-6">No adversarial loopholes identified.</p>
+                ) : (
+                  analysis.forensic_audit.loopholes.map((loophole, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                      <div className="flex justify-between items-start gap-3 mb-2.5">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-base">{loophole.title}</h4>
+                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                          loophole.exposure_level === 'critical' || loophole.exposure_level === 'high'
+                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-455'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                        }`}>
+                          {loophole.exposure_level} risk
+                        </span>
+                      </div>
+                      <div className="mb-3 text-sm text-slate-650 dark:text-slate-300 leading-relaxed">
+                        <span className="font-semibold text-red-650 dark:text-red-400 block mb-1">Adversarial Exploitation (Opposing Lawyer Persona):</span>
+                        {loophole.exploit_scenario}
+                      </div>
+                      <div className="p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-250/50 dark:border-emerald-900/30 text-sm text-slate-700 dark:text-slate-350">
+                        <span className="font-semibold text-green-700 dark:text-green-400 block mb-1">⚖️ Recommended Remediation:</span>
+                        {loophole.remediation}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {knowledgeGraph && (
               <div className={KG_SECTION}>
                 <div className="mb-6">
                   <h2 className={KG_TITLE}>Legal Knowledge Graph</h2>
@@ -1102,7 +1261,6 @@ export default function Dashboard() {
                 <Send className="w-5 h-5 pl-0.5" />
               </button>
             </form>
-          </div>
         </div>
       </main>
     </div>
