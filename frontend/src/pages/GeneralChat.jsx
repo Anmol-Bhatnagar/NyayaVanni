@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bot, User, Send, ArrowLeft, Scale, Download, Copy, Trash2 } from 'lucide-react';
+import {
+  Bot,
+  User,
+  Send,
+  ArrowLeft,
+  Scale,
+  Download,
+  Copy,
+  Trash2,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useConversationHistory } from '../contexts/ConversationHistoryContext';

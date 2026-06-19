@@ -1,13 +1,13 @@
-import google.generativeai as genai
-import os
 import json
 import logging
+import os
 import re
-from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
 from datetime import date
+from typing import List, Literal, Optional
 
+import google.generativeai as genai
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 from ..models.llm_schemas import DocumentAnalysis
 
@@ -15,7 +15,6 @@ load_dotenv()
 
 # Import the custom Legal Query Optimizer
 from .legal_processor import LegalQueryOptimizer
-
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,9 @@ if not api_key or not api_key.strip():
         "RAG and Gemini features will be unavailable until configured."
     )
 
-    logger.warning("GEMINI_API_KEY environment variable is not set or empty. RAG and document analysis features will fail.")
+    logger.warning(
+        "GEMINI_API_KEY environment variable is not set or empty. RAG and document analysis features will fail."
+    )
 else:
     genai.configure(api_key=api_key)
 
@@ -37,17 +38,17 @@ query_optimizer = LegalQueryOptimizer()
 GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash-001")
 
 generation_config = {
-  "temperature": 0.3,
-  "top_p": 0.8,
-  "top_k": 40,
-  "max_output_tokens": 8192,
-  "response_mime_type": "application/json",
-  "response_schema": DocumentAnalysis.model_json_schema(),
+    "temperature": 0.3,
+    "top_p": 0.8,
+    "top_k": 40,
+    "max_output_tokens": 8192,
+    "response_mime_type": "application/json",
+    "response_schema": DocumentAnalysis.model_json_schema(),
 }
 
 chat_config = {
-  "temperature": 0.5,
-  "response_mime_type": "text/plain",
+    "temperature": 0.5,
+    "response_mime_type": "text/plain",
 }
 
 
@@ -108,7 +109,7 @@ def _parse_structured_response(resp) -> dict:
 
     if text:
         # Remove fenced code blocks if present
-        m = re.search(r'```(?:json)?\s*(\{.*\})\s*```', text, re.DOTALL)
+        m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
         if m:
             candidate = m.group(1)
         else:
@@ -119,17 +120,20 @@ def _parse_structured_response(resp) -> dict:
             return json.loads(candidate)
         except Exception:
             # Fallback: find the first { and last } and parse the substring
-            start = candidate.find('{')
-            end = candidate.rfind('}')
+            start = candidate.find("{")
+            end = candidate.rfind("}")
             if start != -1 and end != -1 and end > start:
                 try:
-                    return json.loads(candidate[start:end+1])
+                    return json.loads(candidate[start : end + 1])
                 except Exception:
                     pass
 
     raise ValueError("Unable to parse structured JSON from model response")
 
-def analyze_document_with_gemini(document_text: str, retrieved_laws: list, language: str = "en") -> dict:
+
+def analyze_document_with_gemini(
+    document_text: str, retrieved_laws: list, language: str = "en"
+) -> dict:
     document_text = document_text[:8000]
     retrieved_laws = [law[:500] for law in retrieved_laws[:3]]
     context = "\n".join(retrieved_laws)
@@ -186,14 +190,18 @@ Extract and structure the output strictly in JSON format matching this schema:
         raise
 
 
-def generate_chat_response(document_analysis: dict, chat_history: list, user_message: str, language: str = "en") -> str:
+def generate_chat_response(
+    document_analysis: dict, chat_history: list, user_message: str, language: str = "en"
+) -> str:
     """
     Generate a conversational response using the Gemini chat model.
     """
     optimized_message = query_optimizer.optimize_prompt(user_message)
-    
-    history_str = "\n".join([f"{msg['role'].capitalize()}: {msg['message']}" for msg in chat_history])
-    
+
+    history_str = "\n".join(
+        [f"{msg['role'].capitalize()}: {msg['message']}" for msg in chat_history]
+    )
+
     if document_analysis:
         context_prompt = f"You are helping a user understand their legal document ({document_analysis.get('document_type', 'Document')}).\nPrevious analysis: {json.dumps(document_analysis)}"
     else:
@@ -239,14 +247,20 @@ Example Structure:
         if "not found" in str(e).lower() or "not supported" in str(e).lower():
             return f"AI service configuration error: Gemini model '{GEMINI_MODEL_NAME}' is not available. Please contact the administrator."
         return "AI service is currently unavailable. Please contact the administrator."
-def stream_chat_response(document_analysis: dict, chat_history: list, user_message: str, language: str = "en"):
+
+
+def stream_chat_response(
+    document_analysis: dict, chat_history: list, user_message: str, language: str = "en"
+):
     """
     Generate a conversational response using the Gemini chat model and yield it as a stream.
     """
     optimized_message = query_optimizer.optimize_prompt(user_message)
-    
-    history_str = "\n".join([f"{msg['role'].capitalize()}: {msg['message']}" for msg in chat_history])
-    
+
+    history_str = "\n".join(
+        [f"{msg['role'].capitalize()}: {msg['message']}" for msg in chat_history]
+    )
+
     if document_analysis:
         context_prompt = f"You are helping a user understand their legal document ({document_analysis.get('document_type', 'Document')}).\nPrevious analysis: {json.dumps(document_analysis)}"
     else:

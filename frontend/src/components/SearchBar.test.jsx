@@ -13,9 +13,9 @@ describe('SearchBar Component', () => {
     const handleSearch = vi.fn();
     render(<SearchBar onSearch={handleSearch} />);
     const input = screen.getByRole('textbox');
-    
+
     fireEvent.change(input, { target: { value: 'test query' } });
-    
+
     expect(handleSearch).toHaveBeenCalledWith('test query');
     expect(input.value).toBe('test query');
   });
@@ -24,12 +24,12 @@ describe('SearchBar Component', () => {
     const handleSearch = vi.fn();
     render(<SearchBar onSearch={handleSearch} />);
     const input = screen.getByRole('textbox');
-    
+
     fireEvent.change(input, { target: { value: 'test query' } });
-    
+
     const clearButton = screen.getByRole('button');
     fireEvent.click(clearButton);
-    
+
     expect(handleSearch).toHaveBeenCalledWith('');
     expect(input.value).toBe('');
   });
